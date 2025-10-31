@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Colégio Saber — Login</title>
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <!-- Cabeçalho -->
+  <header>
+    <div class="header-container">
+      <img src="https://via.placeholder.com/80x40?text=Logo" alt="Logo">
+      <h1>Colégio Saber Igaraçu do Tietê</h1>
+    </div>
+  </header>
+
+  <!-- Formulário centralizado -->
+  <main class="login-container">
+    <h2>Login do Sistema</h2>
+    <form id="loginForm" class="form-card">
+      <label for="email">E-mail</label>
+      <input id="email" type="email" placeholder="seu@email.com" required>
+      
+      <label for="senha">Senha</label>
+      <input id="senha" type="password" placeholder="senha" required>
+      
+      <button type="submit">Entrar</button>
+    </form>
+    
+    <p id="mensagem" style="color:red; text-align:center; margin-top:10px;"></p>
+    
+  </main>
+
+  <footer>
+    <p>© 2025 - Colégio Saber Igaraçu do Tietê</p>
+  </footer>
+
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>
