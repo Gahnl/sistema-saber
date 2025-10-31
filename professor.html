@@ -3,43 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel do Professor</title>
-<link rel="stylesheet" href="professor.css">
+<title>Painel do Professor - Colégio Saber</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
-  <img src="https://via.placeholder.com/100x50?text=Logo" alt="Logo">
-  <h1>Colégio Saber Igaraçu do Tietê</h1>
+  <div class="header-container">
+    <img src="https://via.placeholder.com/80x40?text=Logo" alt="Logo">
+    <h1>Colégio Saber Igaraçu do Tietê</h1>
+  </div>
 </header>
 
-<div class="container">
-  <h2>Lançar Nota</h2>
+<main class="container">
+  <h2>Lançar Notas</h2>
+  <div class="form-card">
+    <label for="serieSelect">Selecione a Série:</label>
+    <select id="serieSelect">
+      <option value="">Selecione a série</option>
+      <option>1º ano</option>
+      <option>2º ano</option>
+      <option>3º ano</option>
+      <option>4º ano</option>
+      <option>5º ano</option>
+      <option>6º ano</option>
+      <option>7º ano</option>
+      <option>8º ano</option>
+      <option>9º ano</option>
+    </select>
 
-  <select id="serieSelect">
-    <option value="">Selecione a série</option>
-    <option>1º ano</option>
-    <option>2º ano</option>
-    <option>3º ano</option>
-    <option>4º ano</option>
-    <option>5º ano</option>
-    <option>6º ano</option>
-    <option>7º ano</option>
-    <option>8º ano</option>
-    <option>9º ano</option>
-  </select>
+    <label for="alunoSelect">Selecione o Aluno:</label>
+    <select id="alunoSelect">
+      <option value="">Selecione o aluno</option>
+    </select>
 
-  <select id="alunoSelect">
-    <option value="">Selecione o aluno</option>
-  </select>
+    <label for="materia">Matéria:</label>
+    <input type="text" id="materia" placeholder="Ex: Matemática">
 
-  <input type="text" id="materia" placeholder="Matéria">
-  <input type="number" id="nota" placeholder="Nota (0-10)" min="0" max="10">
-  <button id="btnLancarNota">Lançar Nota</button>
+    <label for="nota">Nota (0-10):</label>
+    <input type="number" id="nota" min="0" max="10">
 
-  <hr>
-  <a href="index.html">Sair do sistema</a>
-</div>
+    <button id="btnLancarNota">Lançar Nota</button>
+  </div>
 
-<script type="module" src="professor.js"></script>
+  <h3>Alunos Cadastrados</h3>
+  <ul id="listaAlunos" class="list-card"></ul>
+
+  <a href="index.html" class="btn-logout">Sair do sistema</a>
+</main>
+
+<footer>
+  <p>© 2025 - Colégio Saber Igaraçu do Tietê</p>
+</footer>
+
+<script type="module" src="js/professor.js"></script>
 </body>
 </html>

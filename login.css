@@ -13,8 +13,8 @@ header .header-container {
   justify-content: center;
   gap: 20px;
   position: relative;
-  background-color: #d4af37;
-  color: white;
+  background-color: #32066d;
+  color: #f8f008;
   padding: 20px;
 }
 
@@ -54,16 +54,16 @@ header img {
 .form-card button {
   margin-top: 20px;
   padding: 12px;
-  background-color: #d4af37;
+  background-color: #f8f008;
   border: none;
-  color: white;
+  color: #32066d;
   border-radius: 8px;
   cursor: pointer;
   transition: 0.15s;
 }
 
 .form-card button:hover {
-  background-color: #b38e2f;
+  background-color: #f9f630;
 }
 
 footer { margin-top: 30px; color: #666; text-align:center; }

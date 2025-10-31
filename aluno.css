@@ -7,8 +7,8 @@ body {
 }
 
 header {
-  background-color: #d4af37;
-  color: white;
+  background-color: #32066d;
+  color: #f8f008;
   padding: 20px;
   position: relative;
 }
@@ -36,16 +36,17 @@ header img {
 .container button {
   margin-top: 14px;
   padding: 10px 16px;
-  background-color: #d4af37;
+  background-color: #f8f008;
   border: none;
-  color: white;
+  border: none;
+  color: #32066d;
   border-radius: 8px;
   cursor: pointer;
   transition: 0.15s;
 }
 
 .container button:hover {
-  background-color: #b38e2f;
+  background-color: f9f630;
 }
 
 footer { margin-top: 30px; color: #666; text-align:center; }
