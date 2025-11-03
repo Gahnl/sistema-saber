@@ -133,3 +133,11 @@ async function carregarListaDeAlunos() {
 
 // Carregar automaticamente ao abrir o painel
 carregarListaDeAlunos();
+// --------- ABRIR PÁGINA DE USUÁRIOS CADASTRADOS ---------
+const btnVerUsuarios = document.getElementById("btnVerUsuarios");
+
+if (btnVerUsuarios) {
+  btnVerUsuarios.addEventListener("click", () => {
+    window.location.href = "usuarios.html"; // redireciona para a página correta
+  });
+}

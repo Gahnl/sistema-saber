@@ -33,28 +33,41 @@
       <option>9º ano</option>
     </select>
 
+    <label for="bimestreNotas">Selecione o Bimestre:</label>
+    <select id="bimestreNotas">
+      <option value="">Selecione o bimestre</option>
+      <option value="1">1º Bimestre</option>
+      <option value="2">2º Bimestre</option>
+      <option value="3">3º Bimestre</option>
+      <option value="4">4º Bimestre</option>
+    </select>
+
     <label for="materia">Matéria:</label>
     <input type="text" id="materia" placeholder="Matéria" readonly>
 
-    <table id="tabelaNotas" border="1" style="width:100%; margin-top:10px; border-collapse: collapse;">
-      <thead>
-        <tr>
-          <th>Aluno</th>
-          <th>1º Bim (Nota)</th>
-          <th>1º Bim (Faltas)</th>
-          <th>2º Bim (Nota)</th>
-          <th>2º Bim (Faltas)</th>
-          <th>3º Bim (Nota)</th>
-          <th>3º Bim (Faltas)</th>
-          <th>4º Bim (Nota)</th>
-          <th>4º Bim (Faltas)</th>
-          <th>Total Faltas</th>
-        </tr>
-      </thead>
-      <tbody id="corpoTabelaNotas"></tbody>
-    </table>
+    <!-- 🔹 Mensagem de orientação -->
+    <p id="mensagemNotas" style="color:#555; text-align:center; margin-top:15px;">
+      Selecione o bimestre para lançar as notas.
+    </p>
 
-    <button id="btnSalvarNotas">Salvar Notas</button>
+    <!-- 🔹 Seção de tabela (inicialmente oculta) -->
+    <div id="secaoNotas" style="display:none;">
+      <table id="tabelaNotas" border="1" style="width:100%; margin-top:10px; border-collapse: collapse;">
+        <thead>
+          <tr style="background-color:#32066d; color:#f8f008;">
+            <th>Aluno</th>
+            <th>Nota Multidisciplinar</th>
+            <th>Avaliação Bimestral</th>
+            <th>Trabalho em Sala</th>
+            <th>Média Final</th>
+            <th>Faltas (Bimestre)</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabelaNotas"></tbody>
+      </table>
+
+      <button id="btnSalvarNotas">Salvar Notas</button>
+    </div>
   </div>
 
   <!-- Seção de Faltas -->
@@ -79,7 +92,6 @@
     <label for="dataFalta">Data da Aula:</label>
     <input type="date" id="dataFalta">
 
-    <!-- Novo campo para o bimestre -->
     <label for="selectBimestre">Selecione o Bimestre:</label>
     <select id="selectBimestre">
       <option value="">Selecione o bimestre</option>
@@ -107,12 +119,9 @@
   <h3>Conteúdos Lançados</h3>
   <ul id="listaConteudos" class="list-card"></ul>
 
- 
-
   <div style="text-align:center; margin-top:10px;">
     <a href="index.html" class="btn-logout">Sair do sistema</a>
   </div>
-
 </main>
 
 <footer>

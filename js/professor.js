@@ -17,39 +17,52 @@ const conteudoInput = document.getElementById("conteudo");
 const dataAulaInput = document.getElementById("dataAula");
 const btnSalvarConteudo = document.getElementById("btnSalvarConteudo");
 const listaConteudos = document.getElementById("listaConteudos");
+const selectBimestre = document.getElementById("selectBimestre");
 
-// 🔹 Campo de seleção de bimestre
-let selectBimestre = document.createElement("select");
-selectBimestre.id = "selectBimestre";
-selectBimestre.innerHTML = `
-  <option value="">Selecione o bimestre</option>
-  <option value="1">1º Bimestre</option>
-  <option value="2">2º Bimestre</option>
-  <option value="3">3º Bimestre</option>
-  <option value="4">4º Bimestre</option>
-`;
-selectBimestre.style.marginTop = "10px";
-selectBimestre.style.display = "block";
-dataFaltaInput.insertAdjacentElement("afterend", selectBimestre);
+// 🔹 Novos elementos para controle visual da seção de notas
+const secaoNotas = document.getElementById("secaoNotas");
+const bimestreNotas = document.getElementById("bimestreNotas");
+const mensagemNotas = document.getElementById("mensagemNotas");
+
+// 🔹 Exibe ou esconde a tabela de notas conforme o bimestre
+bimestreNotas.addEventListener("change", () => {
+  if (bimestreNotas.value) {
+    secaoNotas.style.display = "block";
+    mensagemNotas.style.display = "none";
+    secaoNotas.style.opacity = "0";
+    setTimeout(() => { secaoNotas.style.opacity = "1"; }, 150);
+  } else {
+    secaoNotas.style.display = "none";
+    mensagemNotas.style.display = "block";
+  }
+});
 
 // AUTENTICAÇÃO
 auth.onAuthStateChanged(async (user) => {
   if (!user) { window.location.href = "index.html"; return; }
 
-  const snapUser = await get(ref(db, 'users/' + user.uid));
+  const snapUser = await get(ref(db, "users/" + user.uid));
   const u = snapUser.val();
-  if (!u || u.role !== "teacher") { alert("Acesso negado"); window.location.href = "index.html"; return; }
+  if (!u || u.role !== "teacher") {
+    alert("Acesso negado");
+    window.location.href = "index.html";
+    return;
+  }
 
   materiaInput.value = u.materia;
   carregarConteudos();
 });
 
-// --------- LANÇAMENTO DE NOTAS + FALTAS POR BIMESTRE ---------
-serieSelect.addEventListener("change", async () => {
+// --------- LANÇAMENTO DE NOTAS ---------
+async function carregarTabelaNotas() {
   const serie = serieSelect.value;
-  if (!serie) return;
+  const bimestre = bimestreNotas.value;
+  if (!serie || !bimestre) {
+    corpoTabelaNotas.innerHTML = "";
+    return;
+  }
 
-  const snapshot = await get(ref(db, 'users'));
+  const snapshot = await get(ref(db, "users"));
   const data = snapshot.val();
   corpoTabelaNotas.innerHTML = "";
 
@@ -63,109 +76,127 @@ serieSelect.addEventListener("change", async () => {
       tdNome.textContent = u.name;
       tr.appendChild(tdNome);
 
-      // Campos de nota + faltas para cada bimestre
-      for (let b = 1; b <= 4; b++) {
-        // Nota
-        const tdNota = document.createElement("td");
-        const inputNota = document.createElement("input");
-        inputNota.type = "number";
-        inputNota.min = 0;
-        inputNota.max = 10;
-        inputNota.step = 0.1;
-        inputNota.style.width = "60px";
-        inputNota.dataset.bim = b;
-        inputNota.classList.add("input-nota");
-        tdNota.appendChild(inputNota);
-        tr.appendChild(tdNota);
-
-        // Faltas (somente exibição)
-        const tdFalta = document.createElement("td");
-        const inputFalta = document.createElement("input");
-        inputFalta.type = "number";
-        inputFalta.min = 0;
-        inputFalta.style.width = "50px";
-        inputFalta.dataset.bim = b;
-        inputFalta.classList.add("input-falta");
-        inputFalta.disabled = true;
-        tdFalta.appendChild(inputFalta);
-        tr.appendChild(tdFalta);
+      // Campos de nota
+      const campos = ["multidisciplinar", "avaliacao", "trabalho"];
+      for (let campo of campos) {
+        const td = document.createElement("td");
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = 0;
+        input.max = 10;
+        input.step = 0.1;
+        input.dataset.campo = campo;
+        input.style.width = "80px";
+        td.appendChild(input);
+        tr.appendChild(td);
       }
 
-      // Total de faltas
-      const tdTotalFaltas = document.createElement("td");
-      tdTotalFaltas.classList.add("totalFaltas");
-      tdTotalFaltas.textContent = "0";
-      tr.appendChild(tdTotalFaltas);
+      // Média Final
+      const tdMedia = document.createElement("td");
+      tdMedia.classList.add("td-media");
+      tdMedia.textContent = "0";
+      tr.appendChild(tdMedia);
+
+      // Faltas
+      const tdFaltas = document.createElement("td");
+      tdFaltas.classList.add("td-faltas");
+      tdFaltas.textContent = "0";
+      tr.appendChild(tdFaltas);
 
       corpoTabelaNotas.appendChild(tr);
     }
   }
 
   carregarNotasExistentes();
+}
+
+// Atualiza tabela ao mudar série ou bimestre
+serieSelect.addEventListener("change", carregarTabelaNotas);
+bimestreNotas.addEventListener("change", carregarTabelaNotas);
+
+// Calcular média automaticamente ao digitar
+corpoTabelaNotas.addEventListener("input", (e) => {
+  if (e.target.tagName === "INPUT") {
+    const tr = e.target.closest("tr");
+    const notas = tr.querySelectorAll("input[type='number']");
+    let soma = 0, count = 0;
+
+    notas.forEach(input => {
+      const val = parseFloat(input.value);
+      if (!isNaN(val)) {
+        soma += val;
+        count++;
+      }
+    });
+
+    const media = count ? (soma / count).toFixed(1) : "0";
+    tr.querySelector(".td-media").textContent = media;
+  }
 });
 
 async function carregarNotasExistentes() {
   const alunos = corpoTabelaNotas.querySelectorAll("tr");
   const materia = materiaInput.value;
+  const bimestre = bimestreNotas.value;
 
   for (let tr of alunos) {
     const uid = tr.dataset.uid;
-    const gradesSnap = await get(ref(db, `grades/${uid}/${materia}`));
+    const gradesSnap = await get(ref(db, `grades/${uid}/${materia}/${bimestre}`));
     const grades = gradesSnap.val();
 
-    let totalFaltas = 0;
-
     if (grades) {
-      for (let b = 1; b <= 4; b++) {
-        const inputNota = tr.querySelector(`input.input-nota[data-bim='${b}']`);
-        const inputFalta = tr.querySelector(`input.input-falta[data-bim='${b}']`);
-
-        if (grades[b]) {
-          inputNota.value = grades[b].nota ?? "";
-          inputFalta.value = grades[b].faltas ?? "";
-          totalFaltas += Number(grades[b].faltas || 0);
-        }
-      }
+      tr.querySelector(`input[data-campo='multidisciplinar']`).value = grades.multidisciplinar ?? "";
+      tr.querySelector(`input[data-campo='avaliacao']`).value = grades.avaliacao ?? "";
+      tr.querySelector(`input[data-campo='trabalho']`).value = grades.trabalho ?? "";
+      tr.querySelector(".td-media").textContent = grades.media ?? "0";
+      tr.querySelector(".td-faltas").textContent = grades.faltas ?? "0";
     }
-
-    tr.querySelector(".totalFaltas").textContent = totalFaltas;
   }
 }
 
 btnSalvarNotas.addEventListener("click", async () => {
   const user = auth.currentUser;
   const materia = materiaInput.value;
+  const bimestre = bimestreNotas.value;
   const alunos = corpoTabelaNotas.querySelectorAll("tr");
+
+  if (!bimestre) {
+    alert("Selecione o bimestre antes de salvar!");
+    return;
+  }
 
   try {
     for (let tr of alunos) {
       const uid = tr.dataset.uid;
-      const grades = {};
+      const multidisciplinar = Number(tr.querySelector(`input[data-campo='multidisciplinar']`).value) || 0;
+      const avaliacao = Number(tr.querySelector(`input[data-campo='avaliacao']`).value) || 0;
+      const trabalho = Number(tr.querySelector(`input[data-campo='trabalho']`).value) || 0;
+      const media = ((multidisciplinar + avaliacao + trabalho) / 3).toFixed(1);
+      const faltas = Number(tr.querySelector(".td-faltas").textContent) || 0;
 
-      for (let b = 1; b <= 4; b++) {
-        const nota = Number(tr.querySelector(`input.input-nota[data-bim='${b}']`).value) || 0;
-        const faltas = Number(tr.querySelector(`input.input-falta[data-bim='${b}']`).value) || 0;
-
-        grades[b] = { nota, faltas, professor: user.email };
-      }
-
-      await set(ref(db, `grades/${uid}/${materia}`), grades);
+      await set(ref(db, `grades/${uid}/${materia}/${bimestre}`), {
+        multidisciplinar,
+        avaliacao,
+        trabalho,
+        media,
+        faltas,
+        professor: user.email
+      });
     }
 
-    carregarNotasExistentes();
     alert("Notas salvas com sucesso!");
   } catch (err) {
-    alert("Erro ao salvar: " + err.message);
+    alert("Erro ao salvar notas: " + err.message);
   }
 });
 
-// --------- LANÇAMENTO DE FALTAS COM CHECKLIST ---------
+// --------- LANÇAMENTO DE FALTAS ---------
 serieFaltasSelect.addEventListener("change", async () => {
   const serie = serieFaltasSelect.value;
   listaAlunosFaltas.innerHTML = "";
   if (!serie) return;
 
-  const snapshot = await get(ref(db, 'users'));
+  const snapshot = await get(ref(db, "users"));
   const data = snapshot.val();
 
   for (let uid in data) {
@@ -212,7 +243,6 @@ btnSalvarFaltas.addEventListener("click", async () => {
 
   try {
     for (let uid of alunosFaltantes) {
-      // 1️⃣ Registro no histórico
       const novoRef = push(ref(db, `faltas/${uid}/${materia}`));
       await set(novoRef, {
         data: dataFalta,
@@ -221,16 +251,13 @@ btnSalvarFaltas.addEventListener("click", async () => {
         bimestre: Number(bimestre)
       });
 
-      // 2️⃣ Atualiza faltas no grades (para aparecer na tabela)
       const gradeRef = ref(db, `grades/${uid}/${materia}/${bimestre}`);
       const snap = await get(gradeRef);
       const atual = snap.val();
 
       const faltasAtuais = atual && atual.faltas ? atual.faltas : 0;
-      const notaAtual = atual && atual.nota ? atual.nota : 0;
-
       await set(gradeRef, {
-        nota: notaAtual,
+        ...atual,
         faltas: faltasAtuais + 1,
         professor: user.email
       });
@@ -254,7 +281,10 @@ btnSalvarConteudo.addEventListener("click", async () => {
   const conteudo = conteudoInput.value.trim();
   const dataAula = dataAulaInput.value;
 
-  if (!conteudo || !dataAula) { alert("Preencha o conteúdo e a data!"); return; }
+  if (!conteudo || !dataAula) {
+    alert("Preencha o conteúdo e a data!");
+    return;
+  }
 
   try {
     const novoRef = push(ref(db, `conteudos/${user.uid}/${materia}`));

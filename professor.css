@@ -144,3 +144,100 @@ footer {
 #tabelaHistorico tr:hover {
   background-color: #f3f3ff;
 }
+
+/* --- LISTA DE ALUNOS (UM ABAIXO DO OUTRO) --- */
+#listaAlunosFaltas {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  background-color: #fdfdfd;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+#listaAlunosFaltas div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px 10px;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.06);
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+#listaAlunosFaltas div:hover {
+  background-color: #f8f8ff;
+  border-color: #32066d;
+}
+
+#listaAlunosFaltas label {
+  font-weight: 500;
+  color: #32066d;
+  font-size: 15px;
+  margin: 0;
+  cursor: pointer;
+  flex: 1;
+  text-align: left;
+}
+
+#listaAlunosFaltas input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #f8f008;
+  cursor: pointer;
+}
+
+/* --- AJUSTE DE TABELA PARA TURMAS GRANDES --- */
+#tabelaNotas {
+  display: block;
+  max-height: 450px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-top: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Cabeçalho fixo ao rolar */
+#tabelaNotas thead {
+  position: sticky;
+  top: 0;
+  background-color: #32066d;
+  color: #f8f008;
+  z-index: 2;
+}
+
+/* Linhas alternadas e efeito hover */
+#tabelaNotas tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+#tabelaNotas tbody tr:hover {
+  background-color: #f3f3ff;
+  transition: 0.2s;
+}
+
+/* Células e inputs */
+#tabelaNotas td, 
+#tabelaNotas th {
+  text-align: center;
+  padding: 10px;
+}
+
+#tabelaNotas input[type="number"] {
+  width: 80px;
+  text-align: center;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* Transição suave da seção de notas */
+#secaoNotas {
+  transition: opacity 0.3s ease;
+}
