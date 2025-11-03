@@ -20,24 +20,24 @@ header img {
 }
 
 .container {
-  max-width: 700px;
+  max-width: 900px;
   margin: 30px auto;
   background-color: white;
-  padding: 20px 30px;
+  padding: 25px 30px;
   border-radius: 12px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.08);
   text-align: left;
 }
 
-.container ul {
-  padding-left: 20px;
+h2 {
+  text-align: center;
+  color: #32066d;
 }
 
 .container button {
   margin-top: 14px;
   padding: 10px 16px;
   background-color: #f8f008;
-  border: none;
   border: none;
   color: #32066d;
   border-radius: 8px;
@@ -46,7 +46,51 @@ header img {
 }
 
 .container button:hover {
-  background-color: f9f630;
+  background-color: #f9f630;
 }
 
-footer { margin-top: 30px; color: #666; text-align:center; }
+/* Estilo da tabela */
+.tabela-container {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+th {
+  background-color: #32066d;
+  color: #f8f008;
+}
+
+td {
+  background-color: #f9f9f9;
+  font-weight: 500;
+}
+
+td.notas {
+  color: #0077b6;
+}
+
+td.faltas {
+  color: #d90404;
+}
+
+tr:hover td {
+  background-color: #f3f3f3;
+}
+
+footer {
+  margin-top: 30px;
+  color: #666;
+  text-align: center;
+}
