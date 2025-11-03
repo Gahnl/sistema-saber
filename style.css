@@ -91,6 +91,26 @@ button, .btn-logout {
 button:hover, .btn-logout:hover {
   background-color: #f9f630;
 }
+/* Ajuste especial para o botão de sair (igual aos outros) */
+.btn-logout {
+  display: inline-block;
+  text-decoration: none;
+  background-color: #f8f008;
+  color: #32066d;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 1em;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.btn-logout:hover {
+  background-color: #f9f630;
+}
 
 
 /* Lista de alunos / notas */
