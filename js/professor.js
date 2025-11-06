@@ -1,5 +1,5 @@
 import { auth, db } from "./firebase.js";
-import { ref, get, set, push } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+import { ref, get, set, push, remove } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 // ELEMENTOS
@@ -19,12 +19,11 @@ const btnSalvarConteudo = document.getElementById("btnSalvarConteudo");
 const listaConteudos = document.getElementById("listaConteudos");
 const selectBimestre = document.getElementById("selectBimestre");
 
-// 🔹 Novos elementos para controle visual da seção de notas
+// 🔹 Controle da seção de notas
 const secaoNotas = document.getElementById("secaoNotas");
 const bimestreNotas = document.getElementById("bimestreNotas");
 const mensagemNotas = document.getElementById("mensagemNotas");
 
-// 🔹 Exibe ou esconde a tabela de notas conforme o bimestre
 bimestreNotas.addEventListener("change", () => {
   if (bimestreNotas.value) {
     secaoNotas.style.display = "block";
@@ -76,7 +75,6 @@ async function carregarTabelaNotas() {
       tdNome.textContent = u.name;
       tr.appendChild(tdNome);
 
-      // Campos de nota
       const campos = ["multidisciplinar", "avaliacao", "trabalho"];
       for (let campo of campos) {
         const td = document.createElement("td");
@@ -91,13 +89,11 @@ async function carregarTabelaNotas() {
         tr.appendChild(td);
       }
 
-      // Média Final
       const tdMedia = document.createElement("td");
       tdMedia.classList.add("td-media");
       tdMedia.textContent = "0";
       tr.appendChild(tdMedia);
 
-      // Faltas
       const tdFaltas = document.createElement("td");
       tdFaltas.classList.add("td-faltas");
       tdFaltas.textContent = "0";
@@ -110,11 +106,9 @@ async function carregarTabelaNotas() {
   carregarNotasExistentes();
 }
 
-// Atualiza tabela ao mudar série ou bimestre
 serieSelect.addEventListener("change", carregarTabelaNotas);
 bimestreNotas.addEventListener("change", carregarTabelaNotas);
 
-// Calcular média automaticamente ao digitar
 corpoTabelaNotas.addEventListener("input", (e) => {
   if (e.target.tagName === "INPUT") {
     const tr = e.target.closest("tr");
@@ -275,6 +269,8 @@ btnSalvarFaltas.addEventListener("click", async () => {
 });
 
 // --------- CONTEÚDOS ---------
+let conteudoEmEdicao = null;
+
 btnSalvarConteudo.addEventListener("click", async () => {
   const user = auth.currentUser;
   const materia = materiaInput.value;
@@ -287,12 +283,23 @@ btnSalvarConteudo.addEventListener("click", async () => {
   }
 
   try {
-    const novoRef = push(ref(db, `conteudos/${user.uid}/${materia}`));
-    await set(novoRef, { conteudo, data: dataAula });
+    if (conteudoEmEdicao) {
+      await set(ref(db, `conteudos/${user.uid}/${materia}/${conteudoEmEdicao}`), {
+        conteudo,
+        data: dataAula
+      });
+      alert("Conteúdo atualizado com sucesso!");
+      conteudoEmEdicao = null;
+      btnSalvarConteudo.textContent = "Salvar Conteúdo";
+    } else {
+      const novoRef = push(ref(db, `conteudos/${user.uid}/${materia}`));
+      await set(novoRef, { conteudo, data: dataAula });
+      alert("Conteúdo salvo com sucesso!");
+    }
+
     conteudoInput.value = "";
     dataAulaInput.value = "";
     carregarConteudos();
-    alert("Conteúdo salvo com sucesso!");
   } catch (err) {
     alert("Erro ao salvar conteúdo: " + err.message);
   }
@@ -312,7 +319,63 @@ async function carregarConteudos() {
 
   for (let key in dados) {
     const li = document.createElement("li");
-    li.textContent = `${dados[key].data} - ${dados[key].conteudo}`;
+    li.style.display = "flex";
+    li.style.justifyContent = "space-between";
+    li.style.alignItems = "center";
+    li.style.gap = "10px";
+    li.style.padding = "8px";
+    li.style.marginBottom = "6px";
+    li.style.borderRadius = "8px";
+    li.style.backgroundColor = "#fff";
+    li.style.boxShadow = "0 2px 4px rgba(0,0,0,0.08)";
+
+    const texto = document.createElement("span");
+    texto.textContent = `${dados[key].data} - ${dados[key].conteudo}`;
+    texto.style.flex = "1";
+    texto.style.wordBreak = "break-word";
+
+    const btnBox = document.createElement("div");
+    btnBox.style.display = "flex";
+    btnBox.style.gap = "8px";
+    btnBox.style.flexShrink = "0";
+
+    const btnEditar = document.createElement("button");
+    btnEditar.textContent = "✏️ Editar";
+    btnEditar.style.backgroundColor = "#f8f008";
+    btnEditar.style.border = "1px solid #ccc";
+    btnEditar.style.borderRadius = "6px";
+    btnEditar.style.padding = "4px 10px";
+    btnEditar.style.cursor = "pointer";
+    btnEditar.style.whiteSpace = "nowrap";
+
+    btnEditar.addEventListener("click", () => {
+      conteudoInput.value = dados[key].conteudo;
+      dataAulaInput.value = dados[key].data;
+      conteudoEmEdicao = key;
+      btnSalvarConteudo.textContent = "Salvar Edição ✏️";
+    });
+
+    const btnExcluir = document.createElement("button");
+    btnExcluir.textContent = "🗑️ Excluir";
+    btnExcluir.style.backgroundColor = "#ffcccc";
+    btnExcluir.style.border = "1px solid #ccc";
+    btnExcluir.style.borderRadius = "6px";
+    btnExcluir.style.padding = "4px 10px";
+    btnExcluir.style.cursor = "pointer";
+    btnExcluir.style.whiteSpace = "nowrap";
+
+    btnExcluir.addEventListener("click", async () => {
+      if (confirm("Tem certeza que deseja excluir este conteúdo?")) {
+        await remove(ref(db, `conteudos/${user.uid}/${materia}/${key}`));
+        alert("Conteúdo excluído com sucesso!");
+        carregarConteudos();
+      }
+    });
+
+    btnBox.appendChild(btnEditar);
+    btnBox.appendChild(btnExcluir);
+    li.appendChild(texto);
+    li.appendChild(btnBox);
     listaConteudos.appendChild(li);
   }
 }
