@@ -9,11 +9,18 @@ body {
 
 /* Header */
 header {
-  background-color:  #32066d;
-  padding: 20px 0;
-  color:#f8f008;
+  background: linear-gradient(
+    to right,
+    #ffffff 15%,    /* 15% branco */
+    #32066d 15%,
+    #32066d 85%,    /* 70% azul */
+    #ffffff 85%,
+    #ffffff 100%    /* 15% branco */
+  );
+  color: #f8f008;
+  padding: 20px;
+  position: relative;
 }
-
 .header-container {
   display: flex;
   align-items: center;
@@ -25,7 +32,7 @@ header {
 }
 
 header img {
-  height: 50px;
+  height: 85px;
 }
 
 header h1 {

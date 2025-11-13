@@ -13,15 +13,24 @@ header .header-container {
   justify-content: center;
   gap: 20px;
   position: relative;
-  background-color: #32066d;
-  color: #f8f008;
   padding: 20px;
+
+ background: linear-gradient(
+    to right,
+    #ffffff 15%,    /* 15% branco */
+    #32066d 15%,
+    #32066d 85%,    /* 70% azul */
+    #ffffff 85%,
+    #ffffff 100%    /* 15% branco */
+  );
+
+  color: #f8f008;
 }
 
 header img {
   position: absolute;
   left: 20px;
-  height: 50px;
+  height: 85px;
 }
 
 .login-container {

@@ -6,10 +6,17 @@ body {
 }
 
 header {
-  background-color: #32066d;
+background: linear-gradient(
+    to right,
+    #ffffff 15%,    /* 15% branco */
+    #32066d 15%,
+    #32066d 85%,    /* 70% azul */
+    #ffffff 85%,
+    #ffffff 100%    /* 15% branco */
+  );
   color: #f8f008;
-  padding: 15px 0;
-  text-align: center;
+  padding: 20px;
+  position: relative;
 }
 
 header img {
