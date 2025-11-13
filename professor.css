@@ -1,3 +1,7 @@
+/* ===========================
+   ESTILO GERAL
+   =========================== */
+
 body {
   font-family: Arial, sans-serif;
   background: linear-gradient(135deg, #f0f0f0, #ffffff);
@@ -19,6 +23,7 @@ header img {
   height: 50px;
 }
 
+/* Container Geral */
 .container {
   max-width: 700px;
   margin: 30px auto;
@@ -29,6 +34,7 @@ header img {
   text-align: left;
 }
 
+/* Inputs e elementos gerais */
 .container select,
 .container input,
 .container textarea {
@@ -39,6 +45,7 @@ header img {
   border: 1px solid #ccc;
 }
 
+/* Botões gerais */
 .container button {
   display: inline-block;
   padding: 8px 16px;
@@ -56,96 +63,10 @@ header img {
   background-color: #f9f630;
 }
 
-#listaAlunosFaltas label {
-  display: block;
-  margin: 3px 0;
-}
+/* ===========================
+   LISTA ALUNOS (FALTAS)
+   =========================== */
 
-.list-card {
-  list-style: none;
-  padding: 0;
-  margin-top: 10px;
-}
-
-.list-card li {
-  margin: 5px 0;
-  background-color: #f9f9f9;
-  padding: 8px;
-  border-radius: 6px;
-}
-
-footer {
-  margin-top: 30px;
-  color: #666;
-  text-align: center;
-}
-
-/* Botão de logout */
-.btn-logout {
-  display: inline-block;
-  padding: 8px 16px;
-  margin: 14px auto;
-  background-color: #f8f008;
-  color: #32066d;
-  border-radius: 8px;
-  text-decoration: none;
-  cursor: pointer;
-  text-align: center;
-  transition: 0.15s;
-}
-
-.btn-logout:hover {
-  background-color: #f9f630;
-}
-
-/* --- CAMPOS DO LANÇAMENTO DE FALTAS --- */
-#selectBimestre {
-  width: 100%;
-  padding: 8px;
-  margin: 10px 0;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-/* --- HISTÓRICO DE FALTAS --- */
-#historicoFaltas {
-  margin-top: 40px;
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-}
-
-#tabelaHistorico table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-}
-
-#tabelaHistorico th {
-  background-color: #32066d;
-  color: #f8f008;
-  padding: 8px;
-  border: 1px solid #ddd;
-  font-weight: bold;
-}
-
-#tabelaHistorico td {
-  border: 1px solid #ddd;
-  padding: 6px;
-  text-align: center;
-  color: #333;
-}
-
-#tabelaHistorico tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-#tabelaHistorico tr:hover {
-  background-color: #f3f3ff;
-}
-
-/* --- LISTA DE ALUNOS (UM ABAIXO DO OUTRO) --- */
 #listaAlunosFaltas {
   display: flex;
   flex-direction: column;
@@ -192,18 +113,22 @@ footer {
   cursor: pointer;
 }
 
-/* --- AJUSTE DE TABELA PARA TURMAS GRANDES --- */
+/* ===========================
+   TABELA DE NOTAS
+   =========================== */
+
 #tabelaNotas {
-  display: block;
-  max-height: 450px;
-  overflow-y: auto;
+  display: block !important;
+  overflow-x: auto !important;
+  white-space: nowrap !important;
+  width: 100%;
+  max-width: 100%;
   border: 1px solid #ddd;
   border-radius: 8px;
   margin-top: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Cabeçalho fixo ao rolar */
 #tabelaNotas thead {
   position: sticky;
   top: 0;
@@ -212,7 +137,20 @@ footer {
   z-index: 2;
 }
 
-/* Linhas alternadas e efeito hover */
+#tabelaNotas td,
+#tabelaNotas th {
+  text-align: center;
+  padding: 10px;
+  white-space: nowrap !important;
+}
+
+#tabelaNotas td:first-child,
+#tabelaNotas th:first-child {
+  min-width: 280px !important;
+  text-align: left !important;
+  padding-left: 12px !important;
+}
+
 #tabelaNotas tbody tr:nth-child(even) {
   background-color: #f9f9f9;
 }
@@ -220,13 +158,6 @@ footer {
 #tabelaNotas tbody tr:hover {
   background-color: #f3f3ff;
   transition: 0.2s;
-}
-
-/* Células e inputs */
-#tabelaNotas td, 
-#tabelaNotas th {
-  text-align: center;
-  padding: 10px;
 }
 
 #tabelaNotas input[type="number"] {
@@ -237,13 +168,20 @@ footer {
   border-radius: 6px;
 }
 
-/* Transição suave da seção de notas */
+/* Transição da seção */
 #secaoNotas {
   transition: opacity 0.3s ease;
 }
-/* ============================
-   EXIBIÇÃO CORRETA DOS CONTEÚDOS
-   ============================ */
+
+/* ===========================
+   CONTEÚDOS — LISTA COM BOTÕES
+   =========================== */
+
+#listaConteudos {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
 
 #listaConteudos li {
   display: flex !important;
@@ -254,13 +192,13 @@ footer {
   background-color: #fff !important;
   border: 1px solid #ddd !important;
   border-radius: 8px !important;
+  margin-bottom: 6px;
 }
 
-#listaConteudos span {
-  flex: 1;
+#listaConteudos li span {
+  flex: 1 !important;
+  word-break: break-word !important;
   color: #32066d;
-  font-size: 15px;
-  word-break: break-word;
 }
 
 #listaConteudos li div {
@@ -271,15 +209,46 @@ footer {
 
 #listaConteudos button {
   margin: 0 !important;
-  padding: 4px 12px !important;
+  padding: 6px 12px !important;
   background-color: #f8f008 !important;
   color: #32066d !important;
   border: 1px solid #999 !important;
   border-radius: 6px !important;
+  display: inline-flex !important;
   cursor: pointer;
-  font-size: 14px;
 }
 
 #listaConteudos button:hover {
   background-color: #ffe900 !important;
+}
+
+/* ===========================
+   BOTÃO LOGOUT
+   =========================== */
+
+.btn-logout {
+  display: inline-block;
+  padding: 8px 16px;
+  margin: 14px auto;
+  background-color: #f8f008;
+  color: #32066d;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.15s;
+}
+
+.btn-logout:hover {
+  background-color: #f9f630;
+}
+
+/* ===========================
+   RODAPÉ
+   =========================== */
+
+footer {
+  margin-top: 30px;
+  color: #666;
+  text-align: center;
 }
