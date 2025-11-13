@@ -60,3 +60,27 @@ loginForm.addEventListener("submit", async (e) => {
     mensagem.textContent = "Erro ao logar: " + err.message;
   }
 });
+// --------- ESQUECI MINHA SENHA ---------
+import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+
+const btnEsqueciSenha = document.getElementById("btnEsqueciSenha");
+
+if (btnEsqueciSenha) {
+  btnEsqueciSenha.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value.trim();
+
+    if (!email) {
+      alert("Por favor, digite seu e-mail para redefinir a senha.");
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert(`✅ Um e-mail foi enviado para ${email} com o link para redefinir sua senha.`);
+    } catch (err) {
+      console.error(err);
+      alert("❌ Erro ao enviar e-mail de redefinição: " + err.message);
+    }
+  });
+}
