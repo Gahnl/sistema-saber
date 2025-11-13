@@ -28,19 +28,21 @@ loginForm.addEventListener("submit", async (e) => {
   const senha = document.getElementById("senha").value.trim();
   mensagem.textContent = "";
 
+  // 🔹 1. Verifica ADMIN LOCAL primeiro (antes de chamar Firebase)
+  if (email === "admin@saber.com" && senha === "adminS@ber") {
+    window.location.href = "admin.html";
+    return;
+  }
+
   try {
+    // 🔹 2. Agora tenta autenticar no Firebase
     const cred = await signInWithEmailAndPassword(auth, email, senha);
 
     // 🔎 Verifica o tipo de usuário no banco
-    const snapshot = await get(ref(db, 'users/' + cred.user.uid));
+    const snapshot = await get(ref(db, "users/" + cred.user.uid));
     const userData = snapshot.val();
 
     if (!userData) {
-      // Se for o admin padrão (não cadastrado no banco)
-      if (email === "admin@saber.com" && senha === "123456") {
-        window.location.href = "admin.html";
-        return;
-      }
       throw new Error("Usuário não encontrado no banco de dados.");
     }
 
@@ -60,6 +62,7 @@ loginForm.addEventListener("submit", async (e) => {
     mensagem.textContent = "Erro ao logar: " + err.message;
   }
 });
+
 // --------- ESQUECI MINHA SENHA ---------
 import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 

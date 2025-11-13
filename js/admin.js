@@ -1,52 +1,145 @@
-// js/login.js
+// js/admin.js
 import { auth, db } from "./firebase.js";
-import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-import { ref, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+import { ref, set, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
-// --------- LOGIN ---------
-document.getElementById("btnLogin").addEventListener("click", async () => {
-  const email = document.getElementById("loginEmail").value.trim();
-  const senha = document.getElementById("loginSenha").value.trim();
+// --------- CADASTRAR PROFESSOR ---------
+document.getElementById("btnCreateProf").addEventListener("click", async () => {
+  const name = document.getElementById("profName").value.trim();
+  const email = document.getElementById("profEmail").value.trim();
+  const senha = document.getElementById("profSenha").value.trim();
+  const materia = document.getElementById("profMateria").value;
 
-  if (!email || !senha) {
-    alert("Preencha todos os campos!");
+  if (!name || !email || !senha || !materia) {
+    alert("Preencha todos os campos do professor!");
     return;
   }
 
   try {
-    // Tenta autenticar o usuário no Firebase
-    const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-    const user = userCredential.user;
+    const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+    const userId = userCredential.user.uid;
 
-    // Busca os dados no Realtime Database
-    const snap = await get(ref(db, "users/" + user.uid));
+    await set(ref(db, "users/" + userId), {
+      name,
+      email,
+      role: "teacher",
+      materia,
+      precisaTrocarSenha: true, // 🔹 Campo adicionado
+    });
 
-    if (!snap.exists()) {
-      alert("Usuário não encontrado no banco de dados.");
-      await signOut(auth);
-      return;
-    }
-
-    const dados = snap.val();
-
-    // 🔹 Verifica se precisa trocar a senha
-    if (dados.precisaTrocarSenha === true) {
-      // Armazena temporariamente o ID do usuário
-      localStorage.setItem("usuarioID", user.uid);
-      alert("Por segurança, altere sua senha antes de continuar.");
-      window.location.href = "alterar-senha.html"; // redireciona
-      return;
-    }
-
-    // 🔹 Redirecionamento por tipo de usuário
-    if (dados.role === "teacher") {
-      window.location.href = "painel_professor.html";
-    } else if (dados.role === "student") {
-      window.location.href = "painel_aluno.html";
-    } else {
-      window.location.href = "admin.html"; // caso seja administrador
-    }
+    alert("Professor cadastrado com sucesso!");
+    document.getElementById("profName").value = "";
+    document.getElementById("profEmail").value = "";
+    document.getElementById("profSenha").value = "";
+    document.getElementById("profMateria").value = "";
   } catch (err) {
-    alert("Erro ao fazer login: " + err.message);
+    alert("Erro ao cadastrar professor: " + err.message);
   }
 });
+
+// --------- CADASTRAR ALUNO ---------
+document.getElementById("btnCreateAluno").addEventListener("click", async () => {
+  const name = document.getElementById("alunoName").value.trim();
+  const email = document.getElementById("alunoEmail").value.trim();
+  const senha = document.getElementById("alunoSenha").value.trim();
+  const serie = document.getElementById("alunoSerie").value;
+
+  if (!name || !email || !senha || !serie) {
+    alert("Preencha todos os campos do aluno!");
+    return;
+  }
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+    const userId = userCredential.user.uid;
+
+    await set(ref(db, "users/" + userId), {
+      name,
+      email,
+      role: "student",
+      serie,
+      precisaTrocarSenha: true, // 🔹 Campo adicionado
+    });
+
+    alert("Aluno cadastrado com sucesso!");
+    document.getElementById("alunoName").value = "";
+    document.getElementById("alunoEmail").value = "";
+    document.getElementById("alunoSenha").value = "";
+    document.getElementById("alunoSerie").value = "";
+  } catch (err) {
+    alert("Erro ao cadastrar aluno: " + err.message);
+  }
+});
+
+// --------- GERAR LISTA FILTRADA ---------
+const btnCriarLista = document.getElementById("btnGerarLista"); // 🔹 Corrigido o ID aqui
+
+if (btnCriarLista) {
+  btnCriarLista.addEventListener("click", () => {
+    const materia = document.getElementById("filtroMateria").value;
+    const serie = document.getElementById("filtroSerie").value;
+    const bimestre = document.getElementById("filtroBimestre").value;
+    const aluno = document.getElementById("filtroAluno").value.trim();
+
+    if (!materia || !serie || !bimestre) {
+      alert("Selecione a matéria, série e bimestre!");
+      return;
+    }
+
+    // Salva filtros no localStorage
+    localStorage.setItem("filtroMateria", materia);
+    localStorage.setItem("filtroSerie", serie);
+    localStorage.setItem("filtroBimestre", bimestre);
+
+    if (aluno) {
+      localStorage.setItem("filtroAluno", aluno);
+    } else {
+      localStorage.removeItem("filtroAluno");
+    }
+
+    // Redireciona após breve espera (garante salvamento)
+    setTimeout(() => {
+      window.location.href = "lista.html";
+    }, 300);
+  });
+} else {
+  console.warn("⚠ Botão 'Criar Lista' não encontrado. Verifique o ID no HTML.");
+}
+
+// --------- CARREGAR LISTA DE ALUNOS PARA SUGESTÃO ---------
+async function carregarListaDeAlunos() {
+  try {
+    const snap = await get(ref(db, "users"));
+    const dados = snap.val();
+    const datalist = document.getElementById("listaAlunos");
+
+    if (!dados || !datalist) return;
+
+    datalist.innerHTML = ""; // limpa lista
+
+    for (let uid in dados) {
+      const user = dados[uid];
+      if (user.role === "student" && user.name) {
+        const option = document.createElement("option");
+        option.value = user.name;
+        datalist.appendChild(option);
+      }
+    }
+
+    console.log("✅ Sugestões de alunos carregadas.");
+  } catch (err) {
+    console.error("❌ Erro ao carregar alunos:", err);
+  }
+}
+
+// Carregar automaticamente ao abrir o painel
+carregarListaDeAlunos();
+
+// --------- ABRIR PÁGINA DE USUÁRIOS CADASTRADOS ---------
+const btnVerUsuarios = document.getElementById("btnVerUsuarios");
+
+if (btnVerUsuarios) {
+  btnVerUsuarios.addEventListener("click", () => {
+    window.location.href = "usuarios.html"; // redireciona para a página correta
+  });
+}
