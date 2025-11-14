@@ -7,16 +7,19 @@ body {
 }
 
 header {
- background: linear-gradient(
+  background: linear-gradient(
     to right,
-    #ffffff 15%,    /* 15% branco */
+    #ffffff 15%,
     #32066d 15%,
-    #32066d 85%,    /* 70% azul */
+    #32066d 85%,
     #ffffff 85%,
-    #ffffff 100%    /* 15% branco */
+    #ffffff 100%
   );
   color: #f8f008;
   padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
 }
 
@@ -24,6 +27,20 @@ header img {
   position: absolute;
   left: 20px;
   height: 85px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* 📱 Ajustes para celular */
+@media (max-width: 600px) {
+  header {
+    padding: 15px;
+  }
+
+  header img {
+    height: 55px;       /* diminui o tamanho */
+    left: 10px;         /* aproxima da borda */
+  }
 }
 
 .container {

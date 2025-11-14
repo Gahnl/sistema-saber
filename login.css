@@ -10,21 +10,42 @@ body {
 header .header-container {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center;      /* mantém o texto centralizado */
   gap: 20px;
   position: relative;
   padding: 20px;
 
- background: linear-gradient(
+  background: linear-gradient(
     to right,
-    #ffffff 15%,    /* 15% branco */
+    #ffffff 15%,
     #32066d 15%,
-    #32066d 85%,    /* 70% azul */
+    #32066d 85%,
     #ffffff 85%,
-    #ffffff 100%    /* 15% branco */
+    #ffffff 100%
   );
 
   color: #f8f008;
+}
+
+/* IMAGEM DO HEADER */
+header .header-container img {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);  /* centraliza verticalmente */
+  height: 85px;
+}
+
+/* 📱 Ajustes para celular */
+@media (max-width: 600px) {
+  header .header-container {
+    padding: 15px;
+  }
+
+  header .header-container img {
+    height: 55px;               /* diminui no mobile */
+    left: 10px;                 /* encosta um pouco mais */
+  }
 }
 
 header img {
