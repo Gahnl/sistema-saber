@@ -1,6 +1,18 @@
+// Arquivo: login.js (FINAL PURO COM ADMIN LOCAL MARKER)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+import { 
+  getAuth, 
+  signInWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence,
+  sendPasswordResetEmail 
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+
+import { 
+  getDatabase, 
+  ref, 
+  get 
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 
 // 🔧 Configuração Firebase
 const firebaseConfig = {
@@ -21,51 +33,67 @@ const db = getDatabase(app);
 const loginForm = document.getElementById("loginForm");
 const mensagem = document.getElementById("mensagem");
 
-// 🧠 Login
-loginForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("email").value.trim();
-  const senha = document.getElementById("senha").value.trim();
-  mensagem.textContent = "";
+// ⚠️ ATIVA PERSISTÊNCIA REAL DO LOGIN (ESSENCIAL!)
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log("Persistência ativada ✔");
+  })
+  .catch((err) => {
+    console.error("Erro ao ativar persistência:", err);
+  });
 
-  // 🔹 1. Verifica ADMIN LOCAL primeiro (antes de chamar Firebase)
-  if (email === "admin@saber.com" && senha === "adminS@ber") {
-    window.location.href = "admin.html";
-    return;
-  }
+// 🧠 LOGIN
+if (loginForm) {
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const senha = document.getElementById("senha").value.trim();
+    mensagem.textContent = "";
 
-  try {
-    // 🔹 2. Agora tenta autenticar no Firebase
-    const cred = await signInWithEmailAndPassword(auth, email, senha);
+    // Limpa a flag de login local a cada tentativa
+    localStorage.removeItem("lastLoginEmail"); 
 
-    // 🔎 Verifica o tipo de usuário no banco
-    const snapshot = await get(ref(db, "users/" + cred.user.uid));
-    const userData = snapshot.val();
-
-    if (!userData) {
-      throw new Error("Usuário não encontrado no banco de dados.");
-    }
-
-    // 🔀 Redireciona conforme o papel (role)
-    if (userData.role === "teacher") {
-      window.location.href = "professor.html";
-    } else if (userData.role === "student") {
-      window.location.href = "aluno.html";
-    } else if (userData.role === "admin") {
+    // 🔹 1. ADMIN LOCAL (MARCA E REDIRECIONA SEM CHAMAR O FIREBASE AUTH)
+    if (email === "admin@saber.com" && senha === "adminS@ber") {
+      localStorage.setItem("lastLoginEmail", email); // SALVA A FLAG AQUI
       window.location.href = "admin.html";
-    } else {
-      throw new Error("Tipo de usuário inválido.");
+      return;
     }
+    
+    // 🔹 2. Login Firebase para outros usuários
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, senha);
 
-  } catch (err) {
-    console.error(err);
-    mensagem.textContent = "Erro ao logar: " + err.message;
-  }
-});
+      // 🔎 Busca usuário no BD
+      const snapshot = await get(ref(db, "users/" + cred.user.uid));
+      const userData = snapshot.val();
+
+      if (!userData) {
+        throw new Error("Usuário não encontrado no banco de dados.");
+      }
+
+      // 🔀 REDIRECIONA
+      if (userData.role === "teacher") {
+        window.location.href = "professor.html";
+      } 
+      else if (userData.role === "student") {
+        window.location.href = "aluno.html";
+      } 
+      else if (userData.role === "admin") {
+        window.location.href = "admin.html";
+      } 
+      else {
+        throw new Error("Tipo de usuário inválido.");
+      }
+
+    } catch (err) {
+      console.error(err);
+      mensagem.textContent = "Erro ao logar: " + err.message;
+    }
+  });
+}
 
 // --------- ESQUECI MINHA SENHA ---------
-import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-
 const btnEsqueciSenha = document.getElementById("btnEsqueciSenha");
 
 if (btnEsqueciSenha) {
@@ -80,10 +108,10 @@ if (btnEsqueciSenha) {
 
     try {
       await sendPasswordResetEmail(auth, email);
-      alert(`✅ Um e-mail foi enviado para ${email} com o link para redefinir sua senha.`);
+      alert(`Um e-mail foi enviado para ${email} com instruções.`);
     } catch (err) {
       console.error(err);
-      alert("❌ Erro ao enviar e-mail de redefinição: " + err.message);
+      alert("Erro ao enviar redefinição: " + err.message);
     }
   });
 }

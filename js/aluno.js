@@ -32,71 +32,46 @@ onAuthStateChanged(auth, async (user) => {
   for (const materia in grades) {
     const materiaData = grades[materia];
 
-    let notas = ["-", "-", "-", "-"];
-    let faltas = ["-", "-", "-", "-"];
-    let somaNotas = 0;
-    let countNotas = 0;
-
-    if (Array.isArray(materiaData)) {
-      for (let i = 1; i <= 4; i++) {
-        const bimData = materiaData[i];
-        if (bimData) {
-          if (bimData.nota != null) {
-            notas[i - 1] = bimData.nota;
-            somaNotas += bimData.nota;
-            countNotas++;
-          }
-          if (bimData.faltas != null) {
-            faltas[i - 1] = bimData.faltas;
-          }
-        }
-      }
-    }
-
-    const mediaFinal = countNotas > 0 ? (somaNotas / countNotas).toFixed(1) : "-";
+    // pegar o bimestre
+    const bimestres = [1, 2, 3, 4].map((b) => materiaData[b] || {});
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${materia}</td>
-      ${gerarCelula(0, notas, faltas)}
-      ${gerarCelula(1, notas, faltas)}
-      ${gerarCelula(2, notas, faltas)}
-      ${gerarCelula(3, notas, faltas)}
-      <td><strong>${mediaFinal}</strong></td>
+      <td><strong>${materia}</strong></td>
+      ${bimestres.map(b => gerarCelula(b)).join("")}
     `;
     tabelaNotas.appendChild(tr);
   }
 });
 
-// Função para colorir dinamicamente
-function gerarCelula(i, notas, faltas) {
-  const nota = notas[i];
-  const falta = faltas[i];
+// 🔹 Exibir apenas MÉDIA e FALTAS
+function gerarCelula(b) {
+  const media = b.media ?? "-";
+  const faltas = b.faltas ?? "-";
 
-  // cores das notas
-  let notaCor = "gray";
-  if (nota !== "-") {
-    if (nota >= 6) notaCor = "green";
-    else notaCor = "red";
+  // cores
+  let corMedia = "gray";
+  if (media !== "-") {
+    if (media >= 6) corMedia = "green";
+    else corMedia = "red";
   }
 
-  // cores das faltas
-  let faltaCor = "gray";
-  if (falta !== "-") {
-    if (falta == 0) faltaCor = "green";
-    else if (falta < 5) faltaCor = "orange";
-    else faltaCor = "red";
+  let corFaltas = "gray";
+  if (faltas !== "-") {
+    if (faltas == 0) corFaltas = "green";
+    else if (faltas < 5) corFaltas = "orange";
+    else corFaltas = "red";
   }
 
   return `
-    <td>
-      <span style="color:${notaCor}; font-weight:600;">${nota}</span> /
-      <span style="color:${faltaCor}; font-weight:600;">${falta}</span>
+    <td style="text-align:center; padding:8px;">
+      <div><strong>Média:</strong> <span style="color:${corMedia}; font-weight:600">${media}</span></div>
+      <div><strong>Faltas:</strong> <span style="color:${corFaltas}; font-weight:600">${faltas}</span></div>
     </td>
   `;
 }
 
-// Botão sair
+// botão sair
 document.getElementById("sairBtn").addEventListener("click", async () => {
   await signOut(auth);
   window.location.href = "index.html";

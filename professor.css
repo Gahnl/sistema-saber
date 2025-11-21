@@ -11,6 +11,12 @@ body {
 }
 
 header {
+  display: flex;
+  align-items: center;
+  justify-content: center;   /* centraliza o texto */
+  position: relative;
+  padding: 20px;
+
   background: linear-gradient(
     to right,
     #ffffff 15%,
@@ -19,33 +25,44 @@ header {
     #ffffff 85%,
     #ffffff 100%
   );
+
   color: #f8f008;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
 }
 
+/* Logo do header */
 header img {
   position: absolute;
   left: 20px;
-  height: 85px;
+  height: 80px;
   top: 50%;
   transform: translateY(-50%);
 }
 
+header h1 {
+  margin: 0;
+  text-align: center;
+  font-size: 28px;
+}
+
 /* 📱 Ajustes para celular */
 @media (max-width: 600px) {
+
   header {
     padding: 15px;
   }
 
   header img {
-    height: 55px;       /* diminui o tamanho */
-    left: 10px;         /* aproxima da borda */
+    height: 55px;    /* diminui no celular */
+    left: 10px;
+  }
+
+  header h1 {
+    font-size: 20px;  /* diminui o texto no celular */
+    max-width: 60%;   /* impede que o texto encoste na imagem */
+    margin-left: 40px;
   }
 }
+
 
 /* Container Geral */
 .container {
