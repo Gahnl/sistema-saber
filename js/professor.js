@@ -36,6 +36,9 @@ bimestreNotas.addEventListener("change", () => {
   }
 });
 
+// Guarda turmas do professor atual
+let turmasDoProfessor = []; // ex: ["1º ano","3º ano"]
+
 // AUTENTICAÇÃO
 auth.onAuthStateChanged(async (user) => {
   if (!user) { window.location.href = "index.html"; return; }
@@ -48,9 +51,62 @@ auth.onAuthStateChanged(async (user) => {
     return;
   }
 
-  materiaInput.value = u.materia;
+  // Preenche matéria
+  materiaInput.value = u.materia || "";
+
+  // Carrega turmas atribuídas ao professor
+  // O admin salva como objeto classes: { "1º ano": true, "3º ano": true }
+  turmasDoProfessor = [];
+  if (u.classes) {
+    turmasDoProfessor = Object.keys(u.classes).filter(k => u.classes[k]);
+  }
+
+  // Preenche os selects com as turmas do professor
+  populateTurmasForTeacher(turmasDoProfessor);
+
+  // Carrega conteúdos do professor
   carregarConteudos();
 });
+
+/**
+ * Preenche os selects de série (notas/faltas) apenas com as turmas do professor.
+ * Se o professor não tiver turmas (array vazio), deixa os selects vazios e mostra mensagem.
+ */
+function populateTurmasForTeacher(turmas) {
+  // limpa selects
+  serieSelect.innerHTML = '<option value="">Selecione a série</option>';
+  serieFaltasSelect.innerHTML = '<option value="">Selecione a série</option>';
+  // (se existir algum outro select de séries, preencha aqui também)
+
+  if (!turmas || turmas.length === 0) {
+    // opcional: você pode carregar todas as séries como fallback, se preferir
+    // por enquanto, apenas mantemos a mensagem/placeholder
+    return;
+  }
+
+  for (let t of turmas) {
+    const opt1 = document.createElement("option");
+    opt1.value = t;
+    opt1.textContent = t;
+    serieSelect.appendChild(opt1);
+
+    const opt2 = document.createElement("option");
+    opt2.value = t;
+    opt2.textContent = t;
+    serieFaltasSelect.appendChild(opt2);
+  }
+
+  // opcional: selecionar a primeira turma por padrão
+  if (turmas.length > 0) {
+    serieSelect.value = turmas[0];
+    serieFaltasSelect.value = turmas[0];
+    // dispara carregamento automático de tabela/faltas, se necessário
+    carregarTabelaNotas();
+    // dispara carregamento de lista de faltas
+    const event = new Event('change');
+    serieFaltasSelect.dispatchEvent(event);
+  }
+}
 
 // --------- LANÇAMENTO DE NOTAS ---------
 async function carregarTabelaNotas() {

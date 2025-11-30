@@ -41,7 +41,13 @@ async function carregarUsuarios() {
         <tr>
           <td>${u.name || "-"}</td>
           <td>${u.email || "-"}</td>
-          <td>${u.role === "teacher" ? "Professor" : "Aluno"}</td>
+          <td>${
+            u.role === "admin"
+              ? "Administrador"
+              : u.role === "teacher"
+              ? "Professor"
+              : "Aluno"
+          }</td>
           <td style="text-align:center;">
             <button class="btn-excluir" onclick="excluirUsuario('${uid}')">Excluir</button>
           </td>

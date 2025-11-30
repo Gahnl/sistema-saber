@@ -14,7 +14,7 @@
 
 <div class="container">
 
-  <!-- Seção de cadastro de professor -->
+  <!-- CADASTRAR PROFESSOR -->
   <h2>Cadastrar Professor</h2>
 
   <input type="text" id="profName" placeholder="Nome do professor">
@@ -35,11 +35,28 @@
     <option>Educação Física</option>
   </select>
 
+  <!-- 🔥 DROPDOWN DE TURMAS (CORRIGIDO) -->
+  <label for="multiSelectTurmas">Turmas que o professor leciona:</label>
+  <div class="multi-select" id="multiSelectTurmas">
+    <div class="multi-select-field" id="multiSelectField">Selecione as turmas</div>
+    <div class="multi-select-list" id="multiSelectList">
+      <label><input type="checkbox" value="1º ano"> 1º ano</label>
+      <label><input type="checkbox" value="2º ano"> 2º ano</label>
+      <label><input type="checkbox" value="3º ano"> 3º ano</label>
+      <label><input type="checkbox" value="4º ano"> 4º ano</label>
+      <label><input type="checkbox" value="5º ano"> 5º ano</label>
+      <label><input type="checkbox" value="6º ano"> 6º ano</label>
+      <label><input type="checkbox" value="7º ano"> 7º ano</label>
+      <label><input type="checkbox" value="8º ano"> 8º ano</label>
+      <label><input type="checkbox" value="9º ano"> 9º ano</label>
+    </div>
+  </div>
+
   <button id="btnCreateProf">Cadastrar Professor</button>
 
   <hr>
 
-  <!-- Seção de cadastro de aluno -->
+  <!-- CADASTRAR ALUNO -->
   <h2>Cadastrar Aluno</h2>
 
   <input type="text" id="alunoName" placeholder="Nome do aluno">
@@ -64,7 +81,7 @@
 
   <hr>
 
-  <!-- 🔹 Seção de geração de listas -->
+  <!-- GERAR LISTA -->
   <h2 style="color:#32066d; text-align:center;">Gerar Lista de Notas e Faltas</h2>
 
   <div class="form-card">
@@ -114,9 +131,8 @@
 
     <div class="form-row">
       <label for="filtroAluno">Aluno (opcional):</label>
-<input type="text" id="filtroAluno" list="listaAlunos" placeholder="Digite o nome do aluno">
-<datalist id="listaAlunos"></datalist>
-
+      <input type="text" id="filtroAluno" list="listaAlunos" placeholder="Digite o nome do aluno">
+      <datalist id="listaAlunos"></datalist>
     </div>
 
     <div style="text-align:center; margin-top:25px;">
@@ -126,12 +142,12 @@
 
   <hr>
 
-  <!-- 🔹 Botões extras -->
-  <div style="text-align:center; margin-top:15px;">
+  <div style="text-align:center;">
     <button id="btnVerUsuarios" class="btn-acessar">Ver Usuários Cadastrados</button>
   </div>
 
   <a href="index.html" class="btn-logout">Sair do sistema</a>
+
 </div>
 
 <footer>

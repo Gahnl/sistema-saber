@@ -6,10 +6,11 @@ body {
   text-align: center;
 }
 
+/* ================= HEADER ================= */
 header {
   display: flex;
   align-items: center;
-  justify-content: center;   /* centraliza o texto */
+  justify-content: center;
   position: relative;
   padding: 20px;
 
@@ -18,14 +19,12 @@ header {
     #ffffff 15%,
     #32066d 15%,
     #32066d 85%,
-    #ffffff 85%,
-    #ffffff 100%
+    #ffffff 85%
   );
 
   color: #f8f008;
 }
 
-/* Logo do header */
 header img {
   position: absolute;
   left: 20px;
@@ -36,29 +35,21 @@ header img {
 
 header h1 {
   margin: 0;
-  text-align: center;
   font-size: 28px;
 }
 
-/* 📱 Ajustes para celular */
 @media (max-width: 600px) {
-
-  header {
-    padding: 15px;
-  }
-
   header img {
-    height: 55px;    /* diminui no celular */
-    left: 10px;
+    height: 55px;
   }
-
   header h1 {
-    font-size: 20px;  /* diminui o texto no celular */
-    max-width: 60%;   /* impede que o texto encoste na imagem */
+    font-size: 20px;
+    max-width: 60%;
     margin-left: 40px;
   }
 }
 
+/* ================= CONTAINER ================= */
 .container {
   max-width: 700px;
   margin: 30px auto;
@@ -69,7 +60,13 @@ header h1 {
   text-align: left;
 }
 
-.container input {
+/* 🔥 CORREÇÃO DEFINITIVA:
+   Agora SOMENTE inputs normais recebem estilização.
+   Checkbox NÃO será afetado. */
+.container input[type="text"],
+.container input[type="email"],
+.container input[type="password"],
+.container select {
   width: 100%;
   padding: 8px;
   margin: 8px 0;
@@ -79,82 +76,109 @@ header h1 {
 
 .container button {
   display: block;
-  margin: 14px auto 0 auto; /* margem automática nas laterais para centralizar */
+  margin: 14px auto 0 auto;
   padding: 10px 16px;
   background-color: #f8f008;
   border: none;
   color: #32066d;
   border-radius: 8px;
   cursor: pointer;
-  transition: 0.15s;
 }
 
 .container button:hover {
   background-color: #f9f630;
 }
 
+/* ================= FORM CARDS ================= */
 .form-card {
-  background-color: #ffffff;
   border-radius: 12px;
   padding: 25px;
   margin: 20px 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.form-row {
+/* ==========================================================
+   MULTI-SELECT (TURMAS DO PROFESSOR)
+   ========================================================== */
+.multi-select {
+  position: relative;
+  width: 100%;
+  margin-bottom: 15px;
+  z-index: 10;
+}
+
+.multi-select-field {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  color: #444;
+  position: relative;
+}
+
+.multi-select-field::after {
+  content: "▼";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #32066d;
+  font-size: 12px;
+}
+
+.multi-select-list {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-top: 5px;
+  max-height: 170px;
+  overflow-y: auto;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  z-index: 9999 !important;
+  padding: 5px 0;
+}
+
+.multi-select-list label {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
-}
-
-.form-row label {
-  font-weight: bold;
-  color: #32066d;
-  width: 160px;
-  text-align: right;
-  margin-right: 10px;
-}
-
-.form-row select,
-.form-row input {
-  flex: 1;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
   font-size: 14px;
-  min-width: 180px;
+  color: #444;
+  gap: 10px;
 }
 
+.multi-select-list label:hover {
+  background: #f2f2f2;
+}
+
+/* ================= BUTTONS ================= */
 .btn-acessar {
   background-color: #f8f008;
   color: #32066d;
-  border: none;
   padding: 10px 25px;
-  font-size: 16px;
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
-  transition: 0.3s;
-}
-
-.btn-acessar:hover {
-  background-color: #fff200;
 }
 
 .btn-logout {
   display: block;
-  margin: 25px auto 0;
-  text-align: center;
+  margin: 25px auto;
   color: #32066d;
   font-weight: bold;
   text-decoration: none;
 }
 
-.btn-logout:hover {
-  text-decoration: underline;
+footer {
+  margin-top: 30px;
+  color: #666;
 }
-
-
-footer { margin-top: 30px; color: #666; text-align:center; }
