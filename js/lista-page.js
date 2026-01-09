@@ -3,7 +3,8 @@
 // Compatível com as regras novas do Firebase
 // ===============================================
 
-import { auth, db } from "./firebase.js";
+import { auth, db } from "/js/firebase.js";
+
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 

@@ -1,41 +1,71 @@
 // js/admin.js
-import { auth, db } from "./firebase.js";
+import { auth, db } from "/js/firebase.js";
 import { ref, set, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
-import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 
 // ------------------------------------------------------------------
-// MULTI SELECT DE TURMAS (COMPATÍVEL COM SEU HTML ATUAL)
+// 🔒 PROTEÇÃO DE ROTA — SOMENTE ADMIN
+// ------------------------------------------------------------------
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  try {
+    const snap = await get(ref(db, "users/" + user.uid));
+
+    if (!snap.exists()) {
+      window.location.href = "index.html";
+      return;
+    }
+
+    const dados = snap.val();
+
+    if (dados.role !== "admin") {
+      window.location.href = "index.html";
+      return;
+    }
+
+    // ✅ É admin → pode continuar
+
+  } catch (err) {
+    console.error("Erro ao validar admin:", err);
+    window.location.href = "index.html";
+  }
+});
+
+
+// ------------------------------------------------------------------
+// MULTI SELECT DE TURMAS
 // ------------------------------------------------------------------
 const field = document.getElementById("multiSelectField");
 const list = document.getElementById("multiSelectList");
 
-// abre/fecha o menu
 field.addEventListener("click", () => {
   list.style.display = list.style.display === "block" ? "none" : "block";
 });
 
-// fecha ao clicar fora
 document.addEventListener("click", (e) => {
   if (!field.contains(e.target) && !list.contains(e.target)) {
     list.style.display = "none";
   }
 });
 
-// coleta seleção atualizada
 window.getTurmasSelecionadas = () => {
   return [...list.querySelectorAll("input:checked")].map(chk => chk.value);
 };
 
-// muda texto quando o usuário seleciona ou desmarca
 list.addEventListener("change", () => {
   const selecionadas = window.getTurmasSelecionadas();
   field.textContent = selecionadas.length
     ? selecionadas.join(", ")
     : "Selecione as turmas";
 });
-
-
 
 
 // ------------------------------------------------------------------
@@ -47,7 +77,6 @@ document.getElementById("btnCreateProf").addEventListener("click", async () => {
   const email = document.getElementById("profEmail").value.trim();
   const senha = document.getElementById("profSenha").value.trim();
   const materia = document.getElementById("profMateria").value;
-
   const turmasSelecionadas = window.getTurmasSelecionadas();
 
   if (!name || !email || !senha || !materia || turmasSelecionadas.length === 0) {
@@ -73,13 +102,11 @@ document.getElementById("btnCreateProf").addEventListener("click", async () => {
 
     alert("Professor cadastrado com sucesso!");
 
-    // limpar campos
     document.getElementById("profName").value = "";
     document.getElementById("profEmail").value = "";
     document.getElementById("profSenha").value = "";
     document.getElementById("profMateria").value = "";
 
-    // limpar seleção do multi-select
     list.querySelectorAll("input").forEach(chk => chk.checked = false);
     field.textContent = "Selecione as turmas";
 
@@ -87,8 +114,6 @@ document.getElementById("btnCreateProf").addEventListener("click", async () => {
     alert("Erro ao cadastrar professor: " + err.message);
   }
 });
-
-
 
 
 // ------------------------------------------------------------------
@@ -115,7 +140,7 @@ document.getElementById("btnCreateAluno").addEventListener("click", async () => 
       email,
       role: "student",
       serie,
-      precisaTrocarSenha: true,
+      precisaTrocarSenha: true
     });
 
     alert("Aluno cadastrado com sucesso!");
@@ -129,8 +154,6 @@ document.getElementById("btnCreateAluno").addEventListener("click", async () => 
     alert("Erro ao cadastrar aluno: " + err.message);
   }
 });
-
-
 
 
 // ------------------------------------------------------------------
@@ -158,12 +181,8 @@ document.getElementById("btnGerarLista").addEventListener("click", () => {
     localStorage.removeItem("filtroAluno");
   }
 
-  setTimeout(() => {
-    window.location.href = "lista.html";
-  }, 300);
+  window.location.href = "lista.html";
 });
-
-
 
 
 // ------------------------------------------------------------------
@@ -194,8 +213,6 @@ async function carregarListaDeAlunos() {
 }
 
 carregarListaDeAlunos();
-
-
 
 
 // ------------------------------------------------------------------
