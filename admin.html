@@ -1,158 +1,143 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel Administrativo</title>
-<link rel="stylesheet" href="admini.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Colégio Saber</title>
+    <link rel="stylesheet" href="admini.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 <header>
-  <img src="Assets/simbolo saber.png" alt="Logo">
-  <h1>Colégio Saber Igaraçu do Tietê</h1>
+    <img src="Assets/simbolo saber.png" alt="Logo">
+    <h1>Colégio Saber Igaraçu do Tietê</h1>
 </header>
 
 <div class="container">
 
-  <!-- CADASTRAR PROFESSOR -->
-  <h2>Cadastrar Professor</h2>
-
-  <input type="text" id="profName" placeholder="Nome do professor">
-  <input type="email" id="profEmail" placeholder="E-mail">
-  <input type="password" id="profSenha" placeholder="Senha">
-
-  <label for="profMateria">Matéria:</label>
-  <select id="profMateria">
-    <option value="">Selecione a matéria</option>
-    <option>Matemática</option>
-    <option>Português</option>
-    <option>Arte</option>
-    <option>História</option>
-    <option>Geografia</option>
-    <option>Informática</option>
-    <option>Inglês</option>
-    <option>Ciências</option>
-    <option>Educação Física</option>
-  </select>
-
-  <!-- 🔥 DROPDOWN DE TURMAS (CORRIGIDO) -->
-  <label for="multiSelectTurmas">Turmas que o professor leciona:</label>
-  <div class="multi-select" id="multiSelectTurmas">
-    <div class="multi-select-field" id="multiSelectField">Selecione as turmas</div>
-    <div class="multi-select-list" id="multiSelectList">
-      <label><input type="checkbox" value="1º ano"> 1º ano</label>
-      <label><input type="checkbox" value="2º ano"> 2º ano</label>
-      <label><input type="checkbox" value="3º ano"> 3º ano</label>
-      <label><input type="checkbox" value="4º ano"> 4º ano</label>
-      <label><input type="checkbox" value="5º ano"> 5º ano</label>
-      <label><input type="checkbox" value="6º ano"> 6º ano</label>
-      <label><input type="checkbox" value="7º ano"> 7º ano</label>
-      <label><input type="checkbox" value="8º ano"> 8º ano</label>
-      <label><input type="checkbox" value="9º ano"> 9º ano</label>
-    </div>
-  </div>
-
-  <button id="btnCreateProf">Cadastrar Professor</button>
-
-  <hr>
-
-  <!-- CADASTRAR ALUNO -->
-  <h2>Cadastrar Aluno</h2>
-
-  <input type="text" id="alunoName" placeholder="Nome do aluno">
-  <input type="email" id="alunoEmail" placeholder="E-mail">
-  <input type="password" id="alunoSenha" placeholder="Senha">
-
-  <label for="alunoSerie">Série:</label>
-  <select id="alunoSerie">
-    <option value="">Selecione a série</option>
-    <option>1º ano</option>
-    <option>2º ano</option>
-    <option>3º ano</option>
-    <option>4º ano</option>
-    <option>5º ano</option>
-    <option>6º ano</option>
-    <option>7º ano</option>
-    <option>8º ano</option>
-    <option>9º ano</option>
-  </select>
-
-  <button id="btnCreateAluno">Cadastrar Aluno</button>
-
-  <hr>
-
-  <!-- GERAR LISTA -->
-  <h2 style="color:#32066d; text-align:center;">Gerar Lista de Notas e Faltas</h2>
-
-  <div class="form-card">
-
-    <div class="form-row">
-      <label for="filtroMateria">Matéria:</label>
-      <select id="filtroMateria">
-        <option value="">Selecione a matéria</option>
-        <option>Matemática</option>
-        <option>Português</option>
-        <option>Arte</option>
-        <option>História</option>
-        <option>Geografia</option>
-        <option>Informática</option>
-        <option>Inglês</option>
-        <option>Ciências</option>
-        <option>Educação Física</option>
-      </select>
+    <h2>Cadastrar Professor</h2>
+    <div class="form-card">
+        <input type="text" id="profName" placeholder="Nome do professor">
+        <input type="email" id="profEmail" placeholder="E-mail">
+        <input type="password" id="profSenha" placeholder="Senha">
+        <label for="profMateria">Matéria:</label>
+        <select id="profMateria">
+            <option value="">Selecione a matéria</option>
+            <option>Matemática</option><option>Português</option><option>Arte</option>
+            <option>História</option><option>Geografia</option><option>Informática</option>
+            <option>Inglês</option><option>Ciências</option><option>Educação Física</option>
+        </select>
+        <label>Turmas:</label>
+        <div class="multi-select" id="multiSelectTurmas">
+            <div class="multi-select-field" id="multiSelectField">Selecione as turmas</div>
+            <div class="multi-select-list" id="multiSelectList" style="display:none;">
+                <label><input type="checkbox" value="1º ano"> 1º ano</label>
+                <label><input type="checkbox" value="2º ano"> 2º ano</label>
+                <label><input type="checkbox" value="3º ano"> 3º ano</label>
+                <label><input type="checkbox" value="4º ano"> 4º ano</label>
+                <label><input type="checkbox" value="5º ano"> 5º ano</label>
+                <label><input type="checkbox" value="6º ano"> 6º ano</label>
+                <label><input type="checkbox" value="7º ano"> 7º ano</label>
+                <label><input type="checkbox" value="8º ano"> 8º ano</label>
+                <label><input type="checkbox" value="9º ano"> 9º ano</label>
+            </div>
+        </div>
+        <button id="btnCreateProf">Cadastrar Professor</button>
     </div>
 
-    <div class="form-row">
-      <label for="filtroSerie">Série:</label>
-      <select id="filtroSerie">
-        <option value="">Selecione a série</option>
-        <option>1º ano</option>
-        <option>2º ano</option>
-        <option>3º ano</option>
-        <option>4º ano</option>
-        <option>5º ano</option>
-        <option>6º ano</option>
-        <option>7º ano</option>
-        <option>8º ano</option>
-        <option>9º ano</option>
-      </select>
+    <hr>
+
+    <h2>Cadastrar Aluno</h2>
+    <div class="form-card">
+        <input type="text" id="alunoName" placeholder="Nome do aluno">
+        <input type="email" id="alunoEmail" placeholder="E-mail">
+        <input type="password" id="alunoSenha" placeholder="Senha">
+        <label for="alunoSerie">Série:</label>
+        <select id="alunoSerie">
+            <option value="">Selecione a série</option>
+            <option>1º ano</option><option>2º ano</option><option>3º ano</option>
+            <option>4º ano</option><option>5º ano</option><option>6º ano</option>
+            <option>7º ano</option><option>8º ano</option><option>9º ano</option>
+        </select>
+        <button id="btnCreateAluno">Cadastrar Aluno</button>
     </div>
 
-    <div class="form-row">
-      <label for="filtroBimestre">Bimestre:</label>
-      <select id="filtroBimestre">
-        <option value="">Selecione o bimestre</option>
-        <option value="1">1º Bimestre</option>
-        <option value="2">2º Bimestre</option>
-        <option value="3">3º Bimestre</option>
-        <option value="4">4º Bimestre</option>
-      </select>
+    <hr>
+
+    <h2 style="color:#32066d; text-align:center;">Gerar Notas e Boletins</h2>
+    <div class="form-card">
+        <div class="form-row">
+            <label for="filtroSerie">Série:</label>
+            <select id="filtroSerie">
+                <option value="">Selecione a série</option>
+                <option>1º ano</option><option>2º ano</option><option>3º ano</option>
+                <option>4º ano</option><option>5º ano</option><option>6º ano</option>
+                <option>7º ano</option><option>8º ano</option><option>9º ano</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="filtroBimestre">Bimestre (Para Lista por Matéria):</label>
+            <select id="filtroBimestre">
+                <option value="">Selecione o bimestre</option>
+                <option value="1">1º Bimestre</option><option value="2">2º Bimestre</option>
+                <option value="3">3º Bimestre</option><option value="4">4º Bimestre</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="filtroMateria">Matéria (Para Lista por Matéria):</label>
+            <select id="filtroMateria">
+                <option value="">Opcional para Boletim</option>
+                <option>Matemática</option><option>Português</option><option>Arte</option>
+                <option>História</option><option>Geografia</option><option>Informática</option>
+                <option>Inglês</option><option>Ciências</option><option>Educação Física</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="filtroAluno">Aluno (Para Boletim Individual):</label>
+            <input type="text" id="filtroAluno" list="listaAlunos" placeholder="Digite o nome do aluno">
+            <datalist id="listaAlunos"></datalist>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 25px; flex-wrap: wrap;">
+            <button id="btnGerarLista" class="btn-acessar" style="background-color: #6c757d;">Lista da Turma</button>
+            <button id="btnVisualizarBoletim" class="btn-acessar" style="background-color: #28a745;">👁️ Visualizar Boletim Anual</button>
+        </div>
     </div>
 
-    <div class="form-row">
-      <label for="filtroAluno">Aluno (opcional):</label>
-      <input type="text" id="filtroAluno" list="listaAlunos" placeholder="Digite o nome do aluno">
-      <datalist id="listaAlunos"></datalist>
+    <div id="areaPreview" class="form-card" style="display:none; margin-top: 20px; overflow-x: auto; border: 3px solid #32066d; background-color: #fff;">
+        <h3 style="text-align:center; color:#32066d;">Pré-visualização do Boletim</h3>
+        <p id="infoAlunoPreview" style="text-align: center; font-weight: bold; font-size: 1.1em;"></p>
+        
+        <table id="tabelaPreview" border="1" style="width:100%; border-collapse: collapse; margin-bottom: 15px; text-align: center;">
+            <thead>
+                <tr style="background-color:#32066d; color:#f8f008;">
+                    <th>Matéria</th>
+                    <th>1º Bim</th>
+                    <th>2º Bim</th>
+                    <th>3º Bim</th>
+                    <th>4º Bim</th>
+                    <th>Média Final</th>
+                    <th>Faltas</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaCorpoPreview"></tbody>
+        </table>
+        
+        <div style="text-align:center; display: flex; justify-content: center; gap: 10px;">
+            <button id="btnBaixarPDFConfirmado" class="btn-acessar" style="background-color: #28a745;">📄 Baixar PDF do Boletim</button>
+            <button id="btnFecharPreview" class="btn-logout" style="margin-top:0;">Fechar</button>
+        </div>
     </div>
 
-    <div style="text-align:center; margin-top:25px;">
-      <button id="btnGerarLista" class="btn-acessar">Criar Lista</button>
+    <hr>
+    <div style="text-align:center;">
+        <button id="btnVerUsuarios" class="btn-acessar">Ver Usuários Cadastrados</button>
     </div>
-  </div>
-
-  <hr>
-
-  <div style="text-align:center;">
-    <button id="btnVerUsuarios" class="btn-acessar">Ver Usuários Cadastrados</button>
-  </div>
-
-  <a href="index.html" class="btn-logout">Sair do sistema</a>
-
+    <a href="index.html" class="btn-logout">Sair do sistema</a>
 </div>
 
-<footer>
-  <p>© 2025 - Colégio Saber Igaraçu do Tietê</p>
-</footer>
+<footer><p>© 2025 - Colégio Saber Igaraçu do Tietê</p></footer>
 
 <script type="module" src="js/admin.js"></script>
 </body>

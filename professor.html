@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel do Professor - Colégio Saber</title>
-<link rel="stylesheet" href="professor.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Professor - Colégio Saber</title>
+  <link rel="stylesheet" href="professor.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <header>
@@ -16,21 +17,11 @@
 
 <main class="container">
 
-  <!-- Seção de Notas -->
   <h2>Lançar Notas</h2>
   <div class="form-card">
     <label for="serieSelect">Selecione a Série:</label>
     <select id="serieSelect">
       <option value="">Selecione a série</option>
-      <option>1º ano</option>
-      <option>2º ano</option>
-      <option>3º ano</option>
-      <option>4º ano</option>
-      <option>5º ano</option>
-      <option>6º ano</option>
-      <option>7º ano</option>
-      <option>8º ano</option>
-      <option>9º ano</option>
     </select>
 
     <label for="bimestreNotas">Selecione o Bimestre:</label>
@@ -45,12 +36,10 @@
     <label for="materia">Matéria:</label>
     <input type="text" id="materia" placeholder="Matéria" readonly>
 
-    <!-- 🔹 Mensagem de orientação -->
     <p id="mensagemNotas" style="color:#555; text-align:center; margin-top:15px;">
       Selecione o bimestre para lançar as notas.
     </p>
 
-    <!-- 🔹 Seção de tabela (inicialmente oculta) -->
     <div id="secaoNotas" style="display:none;">
       <table id="tabelaNotas" border="1" style="width:100%; margin-top:10px; border-collapse: collapse;">
         <thead>
@@ -65,26 +54,15 @@
         </thead>
         <tbody id="corpoTabelaNotas"></tbody>
       </table>
-
       <button id="btnSalvarNotas">Salvar Notas</button>
     </div>
   </div>
 
-  <!-- Seção de Faltas -->
   <h2>Lançar Faltas</h2>
   <div class="form-card">
     <label for="serieFaltasSelect">Selecione a Série:</label>
     <select id="serieFaltasSelect">
       <option value="">Selecione a série</option>
-      <option>1º ano</option>
-      <option>2º ano</option>
-      <option>3º ano</option>
-      <option>4º ano</option>
-      <option>5º ano</option>
-      <option>6º ano</option>
-      <option>7º ano</option>
-      <option>8º ano</option>
-      <option>9º ano</option>
     </select>
 
     <div id="listaAlunosFaltas" style="margin-top:10px;"></div>
@@ -104,7 +82,6 @@
     <button id="btnSalvarFaltas">Salvar Faltas</button>
   </div>
 
-  <!-- Seção de Conteúdos -->
   <h2>Lançar Conteúdo</h2>
   <div class="form-card">
     <label for="conteudo">Conteúdo:</label>
@@ -113,11 +90,34 @@
     <label for="dataAula">Data da Aula:</label>
     <input type="date" id="dataAula">
 
+    <label for="bimestreConteudo">Selecione o Bimestre:</label>
+    <select id="bimestreConteudo">
+      <option value="">Selecione o bimestre</option>
+      <option value="1">1º Bimestre</option>
+      <option value="2">2º Bimestre</option>
+      <option value="3">3º Bimestre</option>
+      <option value="4">4º Bimestre</option>
+    </select>
+
     <button id="btnSalvarConteudo">Salvar Conteúdo</button>
   </div>
 
-  <h3>Conteúdos Lançados</h3>
-  <ul id="listaConteudos" class="list-card"></ul>
+ <h3>Conteúdos Lançados</h3>
+
+<div class="pdf-filter-container">
+    <label for="filtroBimestrePDF">Gerar Relatório:</label>
+    <select id="filtroBimestrePDF" style="max-width: 200px;">
+        <option value="1">1º Bimestre</option>
+        <option value="2">2º Bimestre</option>
+        <option value="3">3º Bimestre</option>
+        <option value="4">4º Bimestre</option>
+    </select>
+    <button id="btnGerarPDF">
+        📄 Baixar PDF do Bimestre
+    </button>
+</div>
+
+<ul id="listaConteudos" class="list-card"></ul>
 
   <div style="text-align:center; margin-top:10px;">
     <a href="index.html" class="btn-logout">Sair do sistema</a>

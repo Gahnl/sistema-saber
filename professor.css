@@ -293,3 +293,83 @@ footer {
   color: #666;
   text-align: center;
 }
+/* Estilização da área de filtro do PDF */
+.pdf-filter-container {
+    background-color: #f9f9f9;
+    border-left: 5px solid #32066d; /* Roxo principal */
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+.pdf-filter-container label {
+    font-weight: bold;
+    color: #32066d;
+    margin-bottom: 0; /* Alinha com o select */
+}
+
+/* Estilização do botão Gerar PDF */
+#btnGerarPDF {
+    background-color: #28a745; /* Verde para destacar ação de download */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#btnGerarPDF:hover {
+    background-color: #218838;
+    transform: scale(1.02);
+}
+
+/* Melhoria na lista de conteúdos lançados */
+.list-card li {
+    background: white;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transition: box-shadow 0.3s;
+}
+
+.list-card li:hover {
+    box-shadow: 0 2px 8px rgba(50, 6, 109, 0.2);
+}
+
+.texto-conteudo strong {
+    color: #32066d;
+    background: #f8f008;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    margin-right: 8px;
+}
+
+/* Botões de excluir na lista */
+.btn-excluir {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.btn-excluir:hover {
+    background-color: #c82333;
+}
