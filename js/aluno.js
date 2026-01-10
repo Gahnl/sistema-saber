@@ -4,7 +4,6 @@ import { ref, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-da
 
 const tabelaNotas = document.querySelector("#tabelaNotas tbody");
 
-// 🔒 Proteção de rota — apenas alunos
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "index.html";
@@ -12,98 +11,65 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   try {
-    // Buscar apenas notas do aluno logado
-    const alunoSnap = await get(ref(db, `grades/${user.uid}`));
-    const alunoGrades = alunoSnap.val();
+    const snap = await get(ref(db, `grades/${user.uid}`));
+    const grades = snap.val();
 
-    if (!alunoGrades) {
-      tabelaNotas.innerHTML = `<tr><td colspan="2">Nenhuma nota lançada ainda.</td></tr>`;
+    if (!grades) {
+      tabelaNotas.innerHTML = `<tr><td colspan="6">Nenhuma nota lançada.</td></tr>`;
       return;
     }
 
-    carregarNotasEncontradas(alunoGrades);
+    renderTabela(grades);
 
-  } catch (err) {
-    console.error("Erro ao carregar notas:", err);
-    tabelaNotas.innerHTML = `<tr><td colspan="2">Erro ao carregar notas.</td></tr>`;
+  } catch (e) {
+    console.error(e);
+    tabelaNotas.innerHTML = `<tr><td colspan="6">Erro ao carregar notas.</td></tr>`;
   }
 });
 
-// Renderiza notas finais e faltas
-function carregarNotasEncontradas(grades) {
+function renderTabela(grades) {
   tabelaNotas.innerHTML = "";
 
   for (const materia in grades) {
-    const materiaData = grades[materia];
+    const dadosMateria = grades[materia];
 
-    // Somente bimestres que tenham média ou faltas
-    const bimestres = Object.values(materiaData).filter(b => b.media !== undefined || b.faltas !== undefined);
+    const bimestres = {
+      1: dadosMateria["1"] || null,
+      2: dadosMateria["2"] || null,
+      3: dadosMateria["3"] || null,
+      4: dadosMateria["4"] || null
+    };
 
-    const mediaFinal = calcularMediaFinal(materiaData);
-    const totalFaltas = calcularTotalFaltas(materiaData);
+    let soma = 0;
+    let qtd = 0;
+
+    Object.values(bimestres).forEach(b => {
+      if (b?.media) {
+        soma += Number(b.media);
+        qtd++;
+      }
+    });
+
+    const mediaFinal = qtd ? (soma / qtd).toFixed(1) : "-";
 
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
       <td><strong>${materia}</strong></td>
-      <td style="text-align:center; padding:8px;">
-        <div><strong>Média Final:</strong> <span style="color:${corMedia(mediaFinal)}; font-weight:600">${mediaFinal}</span></div>
-        <div><strong>Faltas:</strong> <span style="color:${corFaltas(totalFaltas)}; font-weight:600">${totalFaltas}</span></div>
-      </td>
+      ${[1,2,3,4].map(n => `
+        <td>
+          ${bimestres[n]?.media ?? "-"} <br>
+          <small>Faltas: ${bimestres[n]?.faltas ?? "-"}</small>
+        </td>
+      `).join("")}
+      <td><strong>${mediaFinal}</strong></td>
     `;
+
     tabelaNotas.appendChild(tr);
   }
 }
 
-// Calcula média final
-function calcularMediaFinal(materiaData) {
-  let soma = 0;
-  let count = 0;
-
-  for (const b of Object.values(materiaData)) {
-    if (b && b.media !== undefined && b.media !== "") {
-      soma += Number(b.media);
-      count++;
-    }
-  }
-
-  return count > 0 ? (soma / count).toFixed(1) : "-";
-}
-
-// Calcula total de faltas
-function calcularTotalFaltas(materiaData) {
-  let somaFaltas = 0;
-  let temFaltas = false;
-
-  for (const b of Object.values(materiaData)) {
-    if (b && b.faltas !== undefined && b.faltas !== "") {
-      somaFaltas += Number(b.faltas);
-      temFaltas = true;
-    }
-  }
-
-  return temFaltas ? somaFaltas : "-";
-}
-
-// Define cor da média
-function corMedia(media) {
-  if (media === "-" || isNaN(media)) return "gray";
-  return media >= 6 ? "green" : "red";
-}
-
-// Define cor das faltas
-function corFaltas(faltas) {
-  if (faltas === "-" || isNaN(faltas)) return "gray";
-  if (faltas == 0) return "green";
-  if (faltas < 5) return "orange";
-  return "red";
-}
-
-// Logout
 document.getElementById("sairBtn").addEventListener("click", async () => {
-  try {
-    await signOut(auth);
-    window.location.href = "index.html";
-  } catch (err) {
-    console.error("Erro ao sair:", err);
-  }
+  await signOut(auth);
+  window.location.href = "index.html";
 });
