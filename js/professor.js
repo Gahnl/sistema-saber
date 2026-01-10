@@ -1,12 +1,6 @@
 import { auth, db } from "/js/firebase.js";
-import { 
-  onAuthStateChanged, 
-  signOut 
-} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-import { 
-  ref, get, set, push, remove 
-} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
-
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+import { ref, get, set, push, remove } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 
 // ------------------------------------------------------------------
 // 🔒 PROTEÇÃO DE ROTA — SOMENTE PROFESSOR
@@ -39,9 +33,8 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-
 // ------------------------------------------------------------------
-// 🔹 SISTEMA DO PROFESSOR (SEU CÓDIGO ORIGINAL)
+// 🔹 SISTEMA DO PROFESSOR COMPLETO
 // ------------------------------------------------------------------
 function iniciarSistemaProfessor(u) {
 
@@ -55,12 +48,12 @@ function iniciarSistemaProfessor(u) {
   const listaAlunosFaltas = document.getElementById("listaAlunosFaltas");
   const dataFaltaInput = document.getElementById("dataFalta");
   const btnSalvarFaltas = document.getElementById("btnSalvarFaltas");
+  const selectBimestre = document.getElementById("selectBimestre");
 
   const conteudoInput = document.getElementById("conteudo");
   const dataAulaInput = document.getElementById("dataAula");
   const btnSalvarConteudo = document.getElementById("btnSalvarConteudo");
   const listaConteudos = document.getElementById("listaConteudos");
-  const selectBimestre = document.getElementById("selectBimestre");
 
   const secaoNotas = document.getElementById("secaoNotas");
   const bimestreNotas = document.getElementById("bimestreNotas");
@@ -89,7 +82,6 @@ function iniciarSistemaProfessor(u) {
   populateTurmasForTeacher(turmasDoProfessor);
   carregarConteudos();
 
-
   // ------------------ TURMAS ------------------
   function populateTurmasForTeacher(turmas) {
     serieSelect.innerHTML = '<option value="">Selecione a série</option>';
@@ -100,7 +92,6 @@ function iniciarSistemaProfessor(u) {
       serieFaltasSelect.add(new Option(t, t));
     });
   }
-
 
   // ------------------ NOTAS ------------------
   async function carregarTabelaNotas() {
@@ -118,7 +109,6 @@ function iniciarSistemaProfessor(u) {
     for (let uid in data) {
       const aluno = data[uid];
       if (aluno.role === "student" && aluno.serie === serie) {
-
         const tr = document.createElement("tr");
         tr.dataset.uid = uid;
 
@@ -202,7 +192,6 @@ function iniciarSistemaProfessor(u) {
     alert("Notas salvas com sucesso!");
   });
 
-
   // ------------------ FALTAS ------------------
   serieFaltasSelect.addEventListener("change", async () => {
     listaAlunosFaltas.innerHTML = "";
@@ -246,10 +235,15 @@ function iniciarSistemaProfessor(u) {
     alert("Faltas lançadas!");
   });
 
-
-  // ------------------ CONTEÚDOS ------------------
+  // ------------------ CONTEÚDOS COM EDIÇÃO INLINE ------------------
   async function carregarConteudos() {
-    const snap = await get(ref(db, `conteudos/${auth.currentUser.uid}/${materiaInput.value}`));
+    const materia = materiaInput.value;
+    if (!materia) {
+      listaConteudos.innerHTML = "<li>Selecione a matéria para ver os conteúdos.</li>";
+      return;
+    }
+
+    const snap = await get(ref(db, `conteudos/${auth.currentUser.uid}/${materia}`));
     const dados = snap.val();
     listaConteudos.innerHTML = "";
 
@@ -259,10 +253,97 @@ function iniciarSistemaProfessor(u) {
     }
 
     for (let k in dados) {
-      listaConteudos.innerHTML += `<li>${dados[k].data} - ${dados[k].conteudo}</li>`;
+      const conteudo = dados[k];
+      const snapUser = await get(ref(db, `users/${auth.currentUser.uid}`));
+      const userRole = snapUser.val()?.role;
+      const podeEditar = (userRole === "admin") || (auth.currentUser.uid === auth.currentUser.uid);
+
+      const li = document.createElement("li");
+      li.id = `conteudo-${k}`;
+      li.innerHTML = `
+        <span class="texto-conteudo">${conteudo.data} - ${conteudo.conteudo}</span>
+        ${podeEditar ? `
+          <button class="btn-editar">Editar</button>
+          <button class="btn-excluir">Excluir</button>
+        ` : ""}
+      `;
+
+      if (podeEditar) {
+        li.querySelector(".btn-editar").addEventListener("click", () => {
+          const span = li.querySelector(".texto-conteudo");
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = conteudo.conteudo;
+          input.style.width = "70%";
+
+          li.insertBefore(input, span);
+          li.removeChild(span);
+
+          const btnSalvar = document.createElement("button");
+          btnSalvar.textContent = "Salvar";
+          li.appendChild(btnSalvar);
+
+          btnSalvar.addEventListener("click", async () => {
+            const novoConteudo = input.value.trim();
+            if (!novoConteudo) return alert("Conteúdo não pode ficar vazio.");
+
+            await set(ref(db, `conteudos/${auth.currentUser.uid}/${materiaInput.value}/${k}`), {
+              ...conteudo,
+              conteudo: novoConteudo
+            });
+
+            carregarConteudos();
+          });
+        });
+
+        li.querySelector(".btn-excluir").addEventListener("click", () => excluirConteudo(k));
+      }
+
+      listaConteudos.appendChild(li);
     }
   }
 
+  btnSalvarConteudo.addEventListener("click", async () => {
+    const materia = materiaInput.value;
+    const dataAula = dataAulaInput.value;
+    const conteudo = conteudoInput.value.trim();
+
+    if (!materia || !dataAula || !conteudo) {
+      alert("Preencha todos os campos.");
+      return;
+    }
+
+    try {
+      const newRef = push(ref(db, `conteudos/${auth.currentUser.uid}/${materia}`));
+      await set(newRef, {
+        data: dataAula,
+        conteudo: conteudo
+      });
+
+      alert("Conteúdo lançado com sucesso!");
+      conteudoInput.value = "";
+      dataAulaInput.value = "";
+
+      carregarConteudos();
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao lançar conteúdo: " + err.message);
+    }
+  });
+
+  window.excluirConteudo = async (conteudoId) => {
+    const confirmar = confirm("Tem certeza que deseja excluir este conteúdo?");
+    if (!confirmar) return;
+
+    try {
+      await remove(ref(db, `conteudos/${auth.currentUser.uid}/${materiaInput.value}/${conteudoId}`));
+      alert("Conteúdo excluído com sucesso!");
+      carregarConteudos();
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao excluir conteúdo: " + err.message);
+    }
+  };
 
   // ------------------ LOGOUT ------------------
   document.querySelector("a[href='index.html']").addEventListener("click", async () => {

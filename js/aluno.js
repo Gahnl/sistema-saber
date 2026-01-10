@@ -4,9 +4,7 @@ import { ref, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-da
 
 const tabelaNotas = document.querySelector("#tabelaNotas tbody");
 
-// ------------------------------------------------------------------
-// 🔒 PROTEÇÃO DE ROTA — SOMENTE ALUNO
-// ------------------------------------------------------------------
+// 🔒 Proteção de rota — apenas alunos
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "index.html";
@@ -14,67 +12,56 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   try {
-    const snap = await get(ref(db, "users/" + user.uid));
-    const u = snap.val();
+    // Buscar apenas notas do aluno logado
+    const alunoSnap = await get(ref(db, `grades/${user.uid}`));
+    const alunoGrades = alunoSnap.val();
 
-    if (!u || u.role !== "student") {
-      alert("Acesso negado");
-      window.location.href = "index.html";
+    if (!alunoGrades) {
+      tabelaNotas.innerHTML = `<tr><td colspan="2">Nenhuma nota lançada ainda.</td></tr>`;
       return;
     }
 
-    // ✅ Usuário é aluno → iniciar página normalmente
-    carregarNotas(u.uid);
+    carregarNotasEncontradas(alunoGrades);
 
   } catch (err) {
-    console.error("Erro ao verificar aluno:", err);
-    window.location.href = "index.html";
+    console.error("Erro ao carregar notas:", err);
+    tabelaNotas.innerHTML = `<tr><td colspan="2">Erro ao carregar notas.</td></tr>`;
   }
 });
 
-// ------------------------------------------------------------------
-// FUNÇÃO PRINCIPAL — CARREGA NOTAS
-// ------------------------------------------------------------------
-async function carregarNotas(uid) {
-  const gradesSnap = await get(ref(db, "grades/" + uid));
-  const grades = gradesSnap.val();
-
+// Renderiza notas finais e faltas
+function carregarNotasEncontradas(grades) {
   tabelaNotas.innerHTML = "";
-
-  if (!grades) {
-    tabelaNotas.innerHTML = `<tr><td colspan="6">Nenhuma nota lançada ainda.</td></tr>`;
-    return;
-  }
 
   for (const materia in grades) {
     const materiaData = grades[materia];
 
-    // pegar os 4 bimestres
-    const bimestres = [1, 2, 3, 4].map(b => materiaData[b] || {});
+    // Somente bimestres que tenham média ou faltas
+    const bimestres = Object.values(materiaData).filter(b => b.media !== undefined || b.faltas !== undefined);
 
-    // calcular média final
     const mediaFinal = calcularMediaFinal(materiaData);
+    const totalFaltas = calcularTotalFaltas(materiaData);
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><strong>${materia}</strong></td>
-      ${bimestres.map(b => gerarCelula(b)).join("")}
-      <td style="text-align:center; font-weight:700;">${mediaFinal}</td>
+      <td style="text-align:center; padding:8px;">
+        <div><strong>Média Final:</strong> <span style="color:${corMedia(mediaFinal)}; font-weight:600">${mediaFinal}</span></div>
+        <div><strong>Faltas:</strong> <span style="color:${corFaltas(totalFaltas)}; font-weight:600">${totalFaltas}</span></div>
+      </td>
     `;
     tabelaNotas.appendChild(tr);
   }
 }
 
-// ------------------------------------------------------------------
-// CALCULA MÉDIA FINAL
-// ------------------------------------------------------------------
-function calcularMediaFinal(m) {
+// Calcula média final
+function calcularMediaFinal(materiaData) {
   let soma = 0;
   let count = 0;
 
-  for (let b = 1; b <= 4; b++) {
-    if (m[b] && m[b].media !== undefined) {
-      soma += Number(m[b].media);
+  for (const b of Object.values(materiaData)) {
+    if (b && b.media !== undefined && b.media !== "") {
+      soma += Number(b.media);
       count++;
     }
   }
@@ -82,38 +69,41 @@ function calcularMediaFinal(m) {
   return count > 0 ? (soma / count).toFixed(1) : "-";
 }
 
-// ------------------------------------------------------------------
-// GERAR CÉLULA DE MÉDIA E FALTAS
-// ------------------------------------------------------------------
-function gerarCelula(b) {
-  const media = b.media ?? "-";
-  const faltas = b.faltas ?? "-";
+// Calcula total de faltas
+function calcularTotalFaltas(materiaData) {
+  let somaFaltas = 0;
+  let temFaltas = false;
 
-  // cores
-  let corMedia = "gray";
-  if (media !== "-") {
-    corMedia = media >= 6 ? "green" : "red";
+  for (const b of Object.values(materiaData)) {
+    if (b && b.faltas !== undefined && b.faltas !== "") {
+      somaFaltas += Number(b.faltas);
+      temFaltas = true;
+    }
   }
 
-  let corFaltas = "gray";
-  if (faltas !== "-") {
-    if (faltas == 0) corFaltas = "green";
-    else if (faltas < 5) corFaltas = "orange";
-    else corFaltas = "red";
-  }
-
-  return `
-    <td style="text-align:center; padding:8px;">
-      <div><strong>Média:</strong> <span style="color:${corMedia}; font-weight:600">${media}</span></div>
-      <div><strong>Faltas:</strong> <span style="color:${corFaltas}; font-weight:600">${faltas}</span></div>
-    </td>
-  `;
+  return temFaltas ? somaFaltas : "-";
 }
 
-// ------------------------------------------------------------------
-// LOGOUT
-// ------------------------------------------------------------------
+// Define cor da média
+function corMedia(media) {
+  if (media === "-" || isNaN(media)) return "gray";
+  return media >= 6 ? "green" : "red";
+}
+
+// Define cor das faltas
+function corFaltas(faltas) {
+  if (faltas === "-" || isNaN(faltas)) return "gray";
+  if (faltas == 0) return "green";
+  if (faltas < 5) return "orange";
+  return "red";
+}
+
+// Logout
 document.getElementById("sairBtn").addEventListener("click", async () => {
-  await signOut(auth);
-  window.location.href = "index.html";
+  try {
+    await signOut(auth);
+    window.location.href = "index.html";
+  } catch (err) {
+    console.error("Erro ao sair:", err);
+  }
 });

@@ -1,5 +1,4 @@
 import { auth, db } from "/js/firebase.js";
-
 import { ref, get, remove } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 
 const listaUsuarios = document.getElementById("listaUsuarios");
@@ -70,11 +69,33 @@ window.excluirUsuario = async (uid) => {
   if (!confirmar) return;
 
   try {
+    // 1️⃣ Revalida token do admin
+    await auth.currentUser.getIdToken(true);
+
+    // 2️⃣ Remove usuário do nó "users"
     await remove(ref(db, "users/" + uid));
-    await remove(ref(db, "grades/" + uid));
-    alert("Usuário removido com sucesso!");
-    carregarUsuarios(); // Atualiza lista
+    console.log("Usuário removido do users");
+
+    // 3️⃣ Remove notas do aluno, se existirem
+    const gradesSnap = await get(ref(db, "grades/" + uid));
+    if (gradesSnap.exists()) {
+      await remove(ref(db, "grades/" + uid));
+      console.log("Notas removidas");
+    }
+
+    // 4️⃣ Remove faltas do aluno, se existirem
+    const faltasSnap = await get(ref(db, "faltas/" + uid));
+    if (faltasSnap.exists()) {
+      await remove(ref(db, "faltas/" + uid));
+      console.log("Faltas removidas");
+    }
+
+    alert("Usuário e todos os dados relacionados removidos com sucesso!");
+    
+    // 5️⃣ Atualiza lista
+    carregarUsuarios();
   } catch (err) {
+    console.error(err);
     alert("Erro ao excluir: " + err.message);
   }
 };
