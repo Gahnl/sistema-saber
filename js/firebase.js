@@ -2,8 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/fireba
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 
-// Substitua "SUA_API_KEY" pela chave real do seu projeto no Firebase
-const firebaseConfig = {
+// Adicionado o export aqui para o admin.js poder ler as chaves
+export const firebaseConfig = {
   apiKey: "AIzaSyCdLIRF811LJ7-BEnXxeht6sXvEtTiYn2U",
   authDomain: "sistema-colegio-saber.firebaseapp.com",
   databaseURL: "https://sistema-colegio-saber-default-rtdb.firebaseio.com",
