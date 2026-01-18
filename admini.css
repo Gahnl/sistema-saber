@@ -13,7 +13,6 @@ header {
   justify-content: center;
   position: relative;
   padding: 20px;
-
   background: linear-gradient(
     to right,
     #ffffff 15%,
@@ -21,7 +20,6 @@ header {
     #32066d 85%,
     #ffffff 85%
   );
-
   color: #f8f008;
 }
 
@@ -39,9 +37,7 @@ header h1 {
 }
 
 @media (max-width: 600px) {
-  header img {
-    height: 55px;
-  }
+  header img { height: 55px; }
   header h1 {
     font-size: 20px;
     max-width: 60%;
@@ -60,18 +56,18 @@ header h1 {
   text-align: left;
 }
 
-/* 🔥 CORREÇÃO DEFINITIVA:
-   Agora SOMENTE inputs normais recebem estilização.
-   Checkbox NÃO será afetado. */
 .container input[type="text"],
 .container input[type="email"],
 .container input[type="password"],
-.container select {
+.container select,
+.container input[type="date"],
+.container textarea {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   margin: 8px 0;
   border-radius: 6px;
   border: 1px solid #ccc;
+  box-sizing: border-box; /* Garante que o padding não aumente o tamanho real */
 }
 
 .container button {
@@ -83,6 +79,7 @@ header h1 {
   color: #32066d;
   border-radius: 8px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .container button:hover {
@@ -95,16 +92,22 @@ header h1 {
   padding: 25px;
   margin: 20px 0;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  position: relative; /* Necessário para conter os multi-selects */
 }
 
 /* ==========================================================
-   MULTI-SELECT (TURMAS DO PROFESSOR)
+   MULTI-SELECT (TURMAS E MATÉRIAS)
    ========================================================== */
 .multi-select {
   position: relative;
   width: 100%;
   margin-bottom: 15px;
-  z-index: 10;
+  z-index: 10; /* Camada base */
+}
+
+/* 🔥 O segredo: O primeiro menu (Matérias) tem prioridade sobre o segundo (Turmas) */
+.multi-select:first-of-type {
+  z-index: 20; 
 }
 
 .multi-select-field {
@@ -117,6 +120,7 @@ header h1 {
   font-size: 14px;
   color: #444;
   position: relative;
+  box-sizing: border-box;
 }
 
 .multi-select-field::after {
@@ -138,11 +142,11 @@ header h1 {
   background: white;
   border: 1px solid #ccc;
   border-radius: 6px;
-  margin-top: 5px;
+  margin-top: 2px;
   max-height: 170px;
   overflow-y: auto;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-  z-index: 9999 !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 9999 !important; /* Sempre no topo */
   padding: 5px 0;
 }
 
@@ -160,7 +164,13 @@ header h1 {
   background: #f2f2f2;
 }
 
-/* ================= BUTTONS ================= */
+/* Impede que o checkbox herde larguras de 100% dos inputs comuns */
+.multi-select-list input[type="checkbox"] {
+  width: auto !important;
+  margin: 0;
+}
+
+/* ================= BUTTONS & PDF ================= */
 .btn-acessar {
   background-color: #f8f008;
   color: #32066d;
@@ -178,7 +188,18 @@ header h1 {
   text-decoration: none;
 }
 
+.btn-logout:hover {
+  text-decoration: underline;
+}
+
 footer {
   margin-top: 30px;
+  padding-bottom: 20px;
   color: #666;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #eee;
+  margin: 30px 0;
 }

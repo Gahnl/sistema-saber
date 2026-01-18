@@ -21,13 +21,23 @@
         <input type="text" id="profName" placeholder="Nome do professor">
         <input type="email" id="profEmail" placeholder="E-mail">
         <input type="password" id="profSenha" placeholder="Senha">
-        <label for="profMateria">Matéria:</label>
-        <select id="profMateria">
-            <option value="">Selecione a matéria</option>
-            <option>Matemática</option><option>Português</option><option>Arte</option>
-            <option>História</option><option>Geografia</option><option>Informática</option>
-            <option>Inglês</option><option>Ciências</option><option>Educação Física</option>
-        </select>
+        
+        <label>Matérias:</label>
+        <div class="multi-select" id="multiSelectMaterias">
+            <div class="multi-select-field" id="multiSelectMateriaField">Selecione as matérias</div>
+            <div class="multi-select-list" id="multiSelectMateriaList" style="display:none;">
+                <label><input type="checkbox" value="Matemática"> Matemática</label>
+                <label><input type="checkbox" value="Português"> Português</label>
+                <label><input type="checkbox" value="Arte"> Arte</label>
+                <label><input type="checkbox" value="História"> História</label>
+                <label><input type="checkbox" value="Geografia"> Geografia</label>
+                <label><input type="checkbox" value="Informática"> Informática</label>
+                <label><input type="checkbox" value="Inglês"> Inglês</label>
+                <label><input type="checkbox" value="Ciências"> Ciências</label>
+                <label><input type="checkbox" value="Educação Física"> Educação Física</label>
+            </div>
+        </div>
+
         <label>Turmas:</label>
         <div class="multi-select" id="multiSelectTurmas">
             <div class="multi-select-field" id="multiSelectField">Selecione as turmas</div>

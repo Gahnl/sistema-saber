@@ -2,7 +2,6 @@ import { auth, db, firebaseConfig } from "/js/firebase.js";
 import { ref, set, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
-// Importações extras para a solução de cadastro isolado
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
@@ -25,16 +24,12 @@ onAuthStateChanged(auth, async (user) => {
 // 🛠️ FUNÇÃO MÁGICA: CADASTRAR SEM DESLOGAR O ADMIN
 // ------------------------------------------------------------------
 async function criarUsuarioNoSecondaryApp(email, senha, dadosPublicos) {
-    // Cria uma instância temporária para não afetar o login atual
     const tempApp = initializeApp(firebaseConfig, "TempRegistration");
     const tempAuth = getAuth(tempApp);
 
     try {
         const uc = await createUserWithEmailAndPassword(tempAuth, email, senha);
-        // Salva no Database principal usando o 'db' do admin
         await set(ref(db, "users/" + uc.user.uid), dadosPublicos);
-        
-        // Desloga e limpa a instância temporária
         await signOut(tempAuth);
         await deleteApp(tempApp);
         return true;
@@ -67,21 +62,53 @@ if (list) {
 }
 
 // ------------------------------------------------------------------
-// CADASTRAR PROFESSOR
+// MULTI SELECT DE MATÉRIAS (NOVO)
+// ------------------------------------------------------------------
+const matField = document.getElementById("multiSelectMateriaField");
+const matList = document.getElementById("multiSelectMateriaList");
+
+if (matField) {
+    matField.addEventListener("click", () => matList.style.display = matList.style.display === "block" ? "none" : "block");
+    document.addEventListener("click", (e) => { 
+        if (!matField.contains(e.target) && !matList.contains(e.target)) matList.style.display = "none"; 
+    });
+}
+
+window.getMateriasSelecionadas = () => [...matList.querySelectorAll("input:checked")].map(chk => chk.value);
+
+if (matList) {
+    matList.addEventListener("change", () => {
+        const sel = window.getMateriasSelecionadas();
+        matField.textContent = sel.length ? sel.join(", ") : "Selecione as matérias";
+    });
+}
+
+// ------------------------------------------------------------------
+// CADASTRAR PROFESSOR (ALTERADO)
 // ------------------------------------------------------------------
 document.getElementById("btnCreateProf").addEventListener("click", async () => {
     const name = document.getElementById("profName").value.trim();
     const email = document.getElementById("profEmail").value.trim();
     const senha = document.getElementById("profSenha").value.trim();
-    const mat = document.getElementById("profMateria").value;
-    const turmas = window.getTurmasSelecionadas();
+    
+    // Agora pegamos listas de matérias e turmas
+    const materiasSelecionadas = window.getMateriasSelecionadas();
+    const turmasSelecionadas = window.getTurmasSelecionadas();
 
-    if (!name || !email || !senha || !mat || turmas.length === 0) return alert("Preencha tudo!");
+    if (!name || !email || !senha || materiasSelecionadas.length === 0 || turmasSelecionadas.length === 0) {
+        return alert("Preencha tudo e selecione ao menos uma matéria e uma turma!");
+    }
 
     try {
         const dados = {
-            name, email, role: "teacher", materia: mat, precisaTrocarSenha: true,
-            classes: turmas.reduce((acc, t) => { acc[t] = true; return acc; }, {})
+            name, 
+            email, 
+            role: "teacher", 
+            precisaTrocarSenha: true,
+            // Salva as matérias como objeto { "Matemática": true, "Física": true }
+            subjects: materiasSelecionadas.reduce((acc, m) => { acc[m] = true; return acc; }, {}),
+            // Salva as turmas como objeto { "1º ano": true, "2º ano": true }
+            classes: turmasSelecionadas.reduce((acc, t) => { acc[t] = true; return acc; }, {})
         };
 
         await criarUsuarioNoSecondaryApp(email, senha, dados);
@@ -93,7 +120,7 @@ document.getElementById("btnCreateProf").addEventListener("click", async () => {
 });
 
 // ------------------------------------------------------------------
-// CADASTRAR ALUNO
+// CADASTRAR ALUNO (MANTIDO)
 // ------------------------------------------------------------------
 document.getElementById("btnCreateAluno").addEventListener("click", async () => {
     const name = document.getElementById("alunoName").value.trim();
@@ -105,7 +132,6 @@ document.getElementById("btnCreateAluno").addEventListener("click", async () => 
 
     try {
         const dados = { name, email, role: "student", serie, precisaTrocarSenha: true };
-        
         await criarUsuarioNoSecondaryApp(email, senha, dados);
         alert("Aluno cadastrado com sucesso!");
         location.reload();
@@ -115,7 +141,7 @@ document.getElementById("btnCreateAluno").addEventListener("click", async () => 
 });
 
 // ------------------------------------------------------------------
-// VISUALIZAR BOLETIM E PDF (Mantidos conforme seu original)
+// VISUALIZAR BOLETIM E PDF (MANTIDO)
 // ------------------------------------------------------------------
 let dadosGlobaisBoletim = [];
 let alunoSelecionadoNome = "";
@@ -207,7 +233,7 @@ document.getElementById("btnFecharPreview").addEventListener("click", () => {
 });
 
 // ------------------------------------------------------------------
-// CARREGAR LISTAS E NAVEGAÇÃO
+// CARREGAR LISTAS E NAVEGAÇÃO (MANTIDO)
 // ------------------------------------------------------------------
 async function carregarAlunosDatalist() {
     const snap = await get(ref(db, "users"));

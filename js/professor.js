@@ -30,7 +30,7 @@ onAuthStateChanged(auth, async (user) => {
 function iniciarSistemaProfessor(u) {
   // ELEMENTOS
   const serieSelect = document.getElementById("serieSelect");
-  const materiaInput = document.getElementById("materia");
+  const materiaSelect = document.getElementById("materiaSelect"); // Alterado para o Select
   const corpoTabelaNotas = document.getElementById("corpoTabelaNotas");
   const btnSalvarNotas = document.getElementById("btnSalvarNotas");
   const serieFaltasSelect = document.getElementById("serieFaltasSelect");
@@ -49,27 +49,37 @@ function iniciarSistemaProfessor(u) {
   const btnGerarPDF = document.getElementById("btnGerarPDF");
   const filtroBimestrePDF = document.getElementById("filtroBimestrePDF");
 
-  let turmasDoProfessor = [];
-  materiaInput.value = u.materia || "";
+  // POPULAR MATÉRIAS E TURMAS
+  function inicializarFiltros() {
+    // Matérias (do novo campo 'subjects' do admin)
+    materiaSelect.innerHTML = '<option value="">Selecione a matéria</option>';
+    if (u.subjects) {
+      Object.keys(u.subjects).forEach(m => {
+        materiaSelect.add(new Option(m, m));
+      });
+    } else if (u.materia) { // Backup para o formato antigo
+      materiaSelect.add(new Option(u.materia, u.materia));
+    }
 
-  if (u.classes) {
-    turmasDoProfessor = Object.keys(u.classes).filter(k => u.classes[k]);
-  }
-  populateTurmas(turmasDoProfessor);
-  carregarConteudos();
-
-  function populateTurmas(turmas) {
+    // Turmas
     serieSelect.innerHTML = '<option value="">Selecione a série</option>';
     serieFaltasSelect.innerHTML = '<option value="">Selecione a série</option>';
-    turmas.forEach(t => {
-      serieSelect.add(new Option(t, t));
-      serieFaltasSelect.add(new Option(t, t));
-    });
+    if (u.classes) {
+      Object.keys(u.classes).filter(k => u.classes[k]).sort().forEach(t => {
+        serieSelect.add(new Option(t, t));
+        serieFaltasSelect.add(new Option(t, t));
+      });
+    }
   }
 
+  inicializarFiltros();
+
+  // Ao trocar a matéria na seção de Conteúdos, recarrega a lista abaixo
+  materiaSelect.addEventListener("change", carregarConteudos);
+
   // CONTROLE DE NOTAS
-  bimestreNotas.addEventListener("change", () => {
-    if (bimestreNotas.value) {
+  const atualizarVisibilidadeNotas = () => {
+    if (bimestreNotas.value && materiaSelect.value && serieSelect.value) {
       secaoNotas.style.display = "block";
       mensagemNotas.style.display = "none";
       carregarTabelaNotas();
@@ -77,14 +87,17 @@ function iniciarSistemaProfessor(u) {
       secaoNotas.style.display = "none";
       mensagemNotas.style.display = "block";
     }
-  });
+  };
 
-  serieSelect.addEventListener("change", carregarTabelaNotas);
+  bimestreNotas.addEventListener("change", atualizarVisibilidadeNotas);
+  serieSelect.addEventListener("change", atualizarVisibilidadeNotas);
+  materiaSelect.addEventListener("change", atualizarVisibilidadeNotas);
 
   async function carregarTabelaNotas() {
     const serie = serieSelect.value;
     const bimestre = bimestreNotas.value;
-    if (!serie || !bimestre) return;
+    const materia = materiaSelect.value;
+    if (!serie || !bimestre || !materia) return;
 
     const snapshot = await get(ref(db, "users"));
     const data = snapshot.val();
@@ -97,9 +110,9 @@ function iniciarSistemaProfessor(u) {
         tr.dataset.uid = uid;
         tr.innerHTML = `
           <td>${aluno.name}</td>
-          <td><input type="number" data-campo="multidisciplinar" min="0" max="10"></td>
-          <td><input type="number" data-campo="avaliacao" min="0" max="10"></td>
-          <td><input type="number" data-campo="trabalho" min="0" max="10"></td>
+          <td><input type="number" data-campo="multidisciplinar" min="0" max="10" step="0.1"></td>
+          <td><input type="number" data-campo="avaliacao" min="0" max="10" step="0.1"></td>
+          <td><input type="number" data-campo="trabalho" min="0" max="10" step="0.1"></td>
           <td class="td-media">0</td>
           <td class="td-faltas">0</td>
         `;
@@ -112,20 +125,15 @@ function iniciarSistemaProfessor(u) {
   corpoTabelaNotas.addEventListener("input", (e) => {
     if (e.target.tagName === "INPUT") {
       const tr = e.target.closest("tr");
-      const inputs = tr.querySelectorAll("input");
-      let soma = 0, count = 0;
-      inputs.forEach(i => {
-        if (i.value !== "") {
-          soma += Number(i.value);
-          count++;
-        }
-      });
-      tr.querySelector(".td-media").textContent = count ? (soma / count).toFixed(1) : "0";
+      const m = Number(tr.querySelector("[data-campo='multidisciplinar']").value) || 0;
+      const a = Number(tr.querySelector("[data-campo='avaliacao']").value) || 0;
+      const t = Number(tr.querySelector("[data-campo='trabalho']").value) || 0;
+      tr.querySelector(".td-media").textContent = ((m + a + t) / 3).toFixed(1);
     }
   });
 
   async function carregarNotasExistentes() {
-    const materia = materiaInput.value;
+    const materia = materiaSelect.value;
     const bimestre = bimestreNotas.value;
     for (let tr of corpoTabelaNotas.querySelectorAll("tr")) {
       const uid = tr.dataset.uid;
@@ -142,8 +150,10 @@ function iniciarSistemaProfessor(u) {
   }
 
   btnSalvarNotas.addEventListener("click", async () => {
-    const materia = materiaInput.value;
+    const materia = materiaSelect.value;
     const bimestre = bimestreNotas.value;
+    if(!materia || !bimestre) return alert("Selecione matéria e bimestre!");
+
     for (let tr of corpoTabelaNotas.querySelectorAll("tr")) {
       const uid = tr.dataset.uid;
       const m = Number(tr.querySelector("[data-campo='multidisciplinar']").value) || 0;
@@ -151,11 +161,12 @@ function iniciarSistemaProfessor(u) {
       const t = Number(tr.querySelector("[data-campo='trabalho']").value) || 0;
       const media = ((m + a + t) / 3).toFixed(1);
       const faltas = Number(tr.querySelector(".td-faltas").textContent) || 0;
+      
       await set(ref(db, `grades/${uid}/${materia}/${bimestre}`), {
         multidisciplinar: m, avaliacao: a, trabalho: t, media, faltas, professor: auth.currentUser.email
       });
     }
-    alert("Notas salvas com sucesso!");
+    alert("Notas de " + materia + " salvas!");
   });
 
   // FALTAS
@@ -174,29 +185,35 @@ function iniciarSistemaProfessor(u) {
   });
 
   btnSalvarFaltas.addEventListener("click", async () => {
-    const materia = materiaInput.value;
+    const materia = materiaSelect.value;
     const dataFalta = dataFaltaInput.value;
     const bimestre = selectBimestre.value;
-    if(!bimestre || !dataFalta) return alert("Selecione data e bimestre.");
+    if(!materia || !bimestre || !dataFalta) return alert("Selecione matéria, data e bimestre.");
+    
     const selecionados = [...listaAlunosFaltas.querySelectorAll("input:checked")].map(cb => cb.value);
     for (let uid of selecionados) {
       const refGrade = ref(db, `grades/${uid}/${materia}/${bimestre}`);
       const snap = await get(refGrade);
       const atual = snap.val() || { faltas: 0 };
-      await set(refGrade, { ...atual, faltas: (atual.faltas || 0) + 1, professor: auth.currentUser.email });
+      await set(refGrade, { ...atual, faltas: (Number(atual.faltas) || 0) + 1, professor: auth.currentUser.email });
     }
-    alert("Faltas lançadas!");
+    alert("Faltas lançadas em " + materia);
+    // Limpar seleção
+    listaAlunosFaltas.querySelectorAll("input:checked").forEach(cb => cb.checked = false);
   });
 
   // CONTEÚDOS
   async function carregarConteudos() {
-    const materia = materiaInput.value;
-    if (!materia) return;
+    const materia = materiaSelect.value;
+    if (!materia) {
+        listaConteudos.innerHTML = "<li>Selecione uma matéria para ver os conteúdos.</li>";
+        return;
+    }
     const snap = await get(ref(db, `conteudos/${auth.currentUser.uid}/${materia}`));
     const dados = snap.val();
     listaConteudos.innerHTML = "";
     if (!dados) {
-      listaConteudos.innerHTML = "<li>Nenhum conteúdo lançado.</li>";
+      listaConteudos.innerHTML = "<li>Nenhum conteúdo lançado para esta matéria.</li>";
       return;
     }
     for (let k in dados) {
@@ -217,11 +234,11 @@ function iniciarSistemaProfessor(u) {
   }
 
   btnSalvarConteudo.addEventListener("click", async () => {
-    const materia = materiaInput.value;
+    const materia = materiaSelect.value;
     const data = dataAulaInput.value;
     const texto = conteudoInput.value.trim();
     const bim = bimestreConteudo.value;
-    if (!materia || !data || !texto || !bim) return alert("Preencha todos os campos.");
+    if (!materia || !data || !texto || !bim) return alert("Selecione a matéria e preencha todos os campos.");
     
     const newRef = push(ref(db, `conteudos/${auth.currentUser.uid}/${materia}`));
     await set(newRef, { data, conteudo: texto, bimestre: bim });
@@ -235,11 +252,16 @@ function iniciarSistemaProfessor(u) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const bimestreAlvo = filtroBimestrePDF.value;
-    const materia = materiaInput.value;
+    const materia = materiaSelect.value;
+
+    if(!materia) return alert("Selecione uma matéria antes.");
 
     const snap = await get(ref(db, `conteudos/${auth.currentUser.uid}/${materia}`));
     const dados = snap.val();
-    if (!dados) return alert("Nenhum conteúdo encontrado.");
+    if (!dados) return alert("Nenhum conteúdo encontrado para esta matéria.");
+
+    const conteudosFiltrados = Object.values(dados).filter(i => i.bimestre === bimestreAlvo);
+    if(conteudosFiltrados.length === 0) return alert("Nenhum conteúdo no bimestre selecionado.");
 
     doc.setFontSize(18);
     doc.text("COLÉGIO SABER", 105, 15, { align: "center" });
@@ -249,7 +271,7 @@ function iniciarSistemaProfessor(u) {
     doc.line(10, 38, 200, 38);
 
     let y = 50;
-    Object.values(dados).filter(i => i.bimestre === bimestreAlvo).forEach(item => {
+    conteudosFiltrados.forEach(item => {
       const dataFmt = item.data.split('-').reverse().join('/');
       doc.setFont("helvetica", "bold");
       doc.text(`Data: ${dataFmt}`, 10, y);
@@ -260,10 +282,12 @@ function iniciarSistemaProfessor(u) {
       if (y > 270) { doc.addPage(); y = 20; }
     });
 
-    doc.save(`Conteudos_${materia}_${bimestreAlvo}Bim.pdf`);
+    doc.save(`Relatorio_${materia}_${bimestreAlvo}Bim.pdf`);
   });
 
-  document.querySelector("a[href='index.html']").addEventListener("click", async () => {
+  // LOGOUT
+  document.querySelector(".btn-logout").addEventListener("click", async () => {
     await signOut(auth);
+    window.location.href = "index.html";
   });
 }
