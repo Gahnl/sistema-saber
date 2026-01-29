@@ -30,7 +30,7 @@ onAuthStateChanged(auth, async (user) => {
 function iniciarSistemaProfessor(u) {
   // ELEMENTOS
   const serieSelect = document.getElementById("serieSelect");
-  const materiaSelect = document.getElementById("materiaSelect"); // Alterado para o Select
+  const materiaSelect = document.getElementById("materiaSelect");
   const corpoTabelaNotas = document.getElementById("corpoTabelaNotas");
   const btnSalvarNotas = document.getElementById("btnSalvarNotas");
   const serieFaltasSelect = document.getElementById("serieFaltasSelect");
@@ -51,17 +51,15 @@ function iniciarSistemaProfessor(u) {
 
   // POPULAR MATÉRIAS E TURMAS
   function inicializarFiltros() {
-    // Matérias (do novo campo 'subjects' do admin)
     materiaSelect.innerHTML = '<option value="">Selecione a matéria</option>';
     if (u.subjects) {
       Object.keys(u.subjects).forEach(m => {
         materiaSelect.add(new Option(m, m));
       });
-    } else if (u.materia) { // Backup para o formato antigo
+    } else if (u.materia) {
       materiaSelect.add(new Option(u.materia, u.materia));
     }
 
-    // Turmas
     serieSelect.innerHTML = '<option value="">Selecione a série</option>';
     serieFaltasSelect.innerHTML = '<option value="">Selecione a série</option>';
     if (u.classes) {
@@ -74,7 +72,6 @@ function iniciarSistemaProfessor(u) {
 
   inicializarFiltros();
 
-  // Ao trocar a matéria na seção de Conteúdos, recarrega a lista abaixo
   materiaSelect.addEventListener("change", carregarConteudos);
 
   // CONTROLE DE NOTAS
@@ -198,11 +195,10 @@ function iniciarSistemaProfessor(u) {
       await set(refGrade, { ...atual, faltas: (Number(atual.faltas) || 0) + 1, professor: auth.currentUser.email });
     }
     alert("Faltas lançadas em " + materia);
-    // Limpar seleção
     listaAlunosFaltas.querySelectorAll("input:checked").forEach(cb => cb.checked = false);
   });
 
-  // CONTEÚDOS
+  // --- CONTEÚDOS (COM EDIÇÃO E EXCLUSÃO) ---
   async function carregarConteudos() {
     const materia = materiaSelect.value;
     if (!materia) {
@@ -219,16 +215,38 @@ function iniciarSistemaProfessor(u) {
     for (let k in dados) {
       const c = dados[k];
       const li = document.createElement("li");
+      li.style.marginBottom = "15px";
+      li.style.padding = "10px";
+      li.style.borderBottom = "1px solid #eee";
+      
       li.innerHTML = `
         <span class="texto-conteudo"><strong>[${c.bimestre}º Bim]</strong> ${c.data} - ${c.conteudo}</span>
-        <button class="btn-excluir" style="margin-left:10px">Excluir</button>
+        <div style="margin-top: 8px;">
+            <button class="btn-editar" style="background: #ffc107; border: none; padding: 4px 10px; cursor: pointer; border-radius: 4px;">Editar</button>
+            <button class="btn-excluir" style="background: #dc3545; color: white; border: none; padding: 4px 10px; cursor: pointer; border-radius: 4px; margin-left: 8px;">Excluir</button>
+        </div>
       `;
+
+      // Evento Editar
+      li.querySelector(".btn-editar").addEventListener("click", () => {
+        dataAulaInput.value = c.data;
+        conteudoInput.value = c.conteudo;
+        bimestreConteudo.value = c.bimestre;
+        
+        btnSalvarConteudo.innerText = "Atualizar Conteúdo";
+        btnSalvarConteudo.dataset.mode = "edit";
+        btnSalvarConteudo.dataset.editId = k;
+        conteudoInput.focus();
+      });
+
+      // Evento Excluir
       li.querySelector(".btn-excluir").addEventListener("click", async () => {
-        if(confirm("Excluir conteúdo?")) {
+        if(confirm("Deseja realmente excluir este conteúdo?")) {
           await remove(ref(db, `conteudos/${auth.currentUser.uid}/${materia}/${k}`));
           carregarConteudos();
         }
       });
+
       listaConteudos.appendChild(li);
     }
   }
@@ -238,11 +256,26 @@ function iniciarSistemaProfessor(u) {
     const data = dataAulaInput.value;
     const texto = conteudoInput.value.trim();
     const bim = bimestreConteudo.value;
-    if (!materia || !data || !texto || !bim) return alert("Selecione a matéria e preencha todos os campos.");
     
-    const newRef = push(ref(db, `conteudos/${auth.currentUser.uid}/${materia}`));
-    await set(newRef, { data, conteudo: texto, bimestre: bim });
-    alert("Conteúdo salvo!");
+    if (!materia || !data || !texto || !bim) return alert("Preencha todos os campos.");
+
+    const mode = btnSalvarConteudo.dataset.mode;
+    
+    if (mode === "edit") {
+        const editId = btnSalvarConteudo.dataset.editId;
+        await set(ref(db, `conteudos/${auth.currentUser.uid}/${materia}/${editId}`), {
+            data, conteudo: texto, bimestre: bim
+        });
+        alert("Conteúdo atualizado!");
+        btnSalvarConteudo.innerText = "Salvar Conteúdo";
+        delete btnSalvarConteudo.dataset.mode;
+        delete btnSalvarConteudo.dataset.editId;
+    } else {
+        const newRef = push(ref(db, `conteudos/${auth.currentUser.uid}/${materia}`));
+        await set(newRef, { data, conteudo: texto, bimestre: bim });
+        alert("Conteúdo salvo!");
+    }
+    
     conteudoInput.value = "";
     carregarConteudos();
   });
