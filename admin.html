@@ -9,13 +9,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
+
 <header>
     <img src="Assets/simbolo saber.png" alt="Logo">
     <h1>Colégio Saber Igaraçu do Tietê</h1>
 </header>
 
 <div class="container">
-
     <h2>Cadastrar Professor</h2>
     <div class="form-card">
         <input type="text" id="profName" placeholder="Nome do professor">
@@ -75,75 +75,95 @@
 
     <hr>
 
-    <h2 style="color:#32066d; text-align:center;">Gerar Notas e Boletins</h2>
-    <div class="form-card">
-        <div class="form-row">
-            <label for="filtroSerie">Série:</label>
-            <select id="filtroSerie">
-                <option value="">Selecione a série</option>
-                <option>1º ano</option><option>2º ano</option><option>3º ano</option>
-                <option>4º ano</option><option>5º ano</option><option>6º ano</option>
-                <option>7º ano</option><option>8º ano</option><option>9º ano</option>
-            </select>
-        </div>
-        <div class="form-row">
-            <label for="filtroBimestre">Bimestre (Para Lista por Matéria):</label>
-            <select id="filtroBimestre">
-                <option value="">Selecione o bimestre</option>
-                <option value="1">1º Bimestre</option><option value="2">2º Bimestre</option>
-                <option value="3">3º Bimestre</option><option value="4">4º Bimestre</option>
-            </select>
-        </div>
-        <div class="form-row">
-            <label for="filtroMateria">Matéria (Para Lista por Matéria):</label>
-            <select id="filtroMateria">
-                <option value="">Opcional para Boletim</option>
-                <option>Matemática</option><option>Português</option><option>Arte</option>
-                <option>História</option><option>Geografia</option><option>Informática</option>
-                <option>Inglês</option><option>Ciências</option><option>Educação Física</option>
-            </select>
-        </div>
-        <div class="form-row">
-            <label for="filtroAluno">Aluno (Para Boletim Individual):</label>
-            <input type="text" id="filtroAluno" list="listaAlunos" placeholder="Digite o nome do aluno">
-            <datalist id="listaAlunos"></datalist>
-        </div>
+    <h2 class="titulo-gerenciamento">Gerenciamento de Usuários</h2>
+    <div class="toggle-container">
+        <button id="btnToggleProf" class="btn-toggle">📂 Ver Professores</button>
+        <button id="btnToggleAlunos" class="btn-toggle">📂 Ver Alunos</button>
+    </div>
 
-        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 25px; flex-wrap: wrap;">
-            <button id="btnGerarLista" class="btn-acessar" style="background-color: #6c757d;">Lista da Turma</button>
-            <button id="btnVisualizarBoletim" class="btn-acessar" style="background-color: #28a745;">👁️ Visualizar Boletim Anual</button>
+    <div id="containerProfessores" class="form-card" style="display:none;">
+        <h3>Lista de Professores</h3>
+        <input type="text" id="buscaProf" placeholder="🔍 Buscar professor...">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>Nome</th><th>E-mail</th><th>Turmas/Matérias</th><th>Ações</th></tr>
+                </thead>
+                <tbody id="listaProfessores"></tbody>
+            </table>
         </div>
     </div>
 
-    <div id="areaPreview" class="form-card" style="display:none; margin-top: 20px; overflow-x: auto; border: 3px solid #32066d; background-color: #fff;">
-        <h3 style="text-align:center; color:#32066d;">Pré-visualização do Boletim</h3>
-        <p id="infoAlunoPreview" style="text-align: center; font-weight: bold; font-size: 1.1em;"></p>
-        
-        <table id="tabelaPreview" border="1" style="width:100%; border-collapse: collapse; margin-bottom: 15px; text-align: center;">
-            <thead>
-                <tr style="background-color:#32066d; color:#f8f008;">
-                    <th>Matéria</th>
-                    <th>1º Bim</th>
-                    <th>2º Bim</th>
-                    <th>3º Bim</th>
-                    <th>4º Bim</th>
-                    <th>Média Final</th>
-                    <th>Faltas</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaCorpoPreview"></tbody>
-        </table>
-        
-        <div style="text-align:center; display: flex; justify-content: center; gap: 10px;">
-            <button id="btnBaixarPDFConfirmado" class="btn-acessar" style="background-color: #28a745;">📄 Baixar PDF do Boletim</button>
-            <button id="btnFecharPreview" class="btn-logout" style="margin-top:0;">Fechar</button>
+    <div id="containerAlunos" class="form-card" style="display:none;">
+        <h3>Lista de Alunos</h3>
+        <input type="text" id="buscaAluno" placeholder="🔍 Buscar aluno...">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>Nome</th><th>E-mail</th><th>Série</th><th>Ações</th></tr>
+                </thead>
+                <tbody id="listaAlunosCadastrados"></tbody>
+            </table>
         </div>
     </div>
 
     <hr>
-    <div style="text-align:center;">
-        <button id="btnVerUsuarios" class="btn-acessar">Ver Usuários Cadastrados</button>
+
+    <h2>Gerar Notas e Boletins</h2>
+    <div class="form-card">
+        <label>Selecione a Turma:</label>
+        <select id="filtroSerie">
+            <option value="">Selecione a série</option>
+            <option>1º ano</option><option>2º ano</option><option>3º ano</option>
+            <option>4º ano</option><option>5º ano</option><option>6º ano</option>
+            <option>7º ano</option><option>8º ano</option><option>9º ano</option>
+        </select>
+
+        <label>Selecione o Aluno (para Boletim):</label>
+        <input type="text" id="filtroAluno" list="listaAlunos" placeholder="Nome do aluno">
+        <datalist id="listaAlunos"></datalist>
+        
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button id="btnGerarLista" style="background-color: #32066d; color: #f8f008; margin:0; flex:1;">📂 Lista da Turma</button>
+            <button id="btnVisualizarBoletim" style="background-color: #28a745; color: white; margin:0; flex:1;">👁️ Ver Boletim</button>
+        </div>
     </div>
+
+    <div id="containerListaTurma" class="form-card" style="display:none; border: 2px solid #32066d;">
+        <h3 id="tituloListaTurma" style="text-align:center; color:#32066d;"></h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr style="background-color:#32066d; color:#f8f008;">
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoListaTurma"></tbody>
+            </table>
+        </div>
+        <button onclick="document.getElementById('containerListaTurma').style.display='none'" style="background-color:#6c757d; color:white; margin-top:10px;">Fechar Lista</button>
+    </div>
+
+    <div id="areaPreview" class="form-card" style="display:none; border: 2px solid #28a745;">
+        <h3 style="text-align:center;">Boletim Anual</h3>
+        <p id="infoAlunoPreview" style="text-align: center; font-weight: bold;"></p>
+        <div class="table-wrapper">
+            <table id="tabelaPreview">
+                <thead>
+                    <tr style="background:#32066d; color:#fff;">
+                        <th>Matéria</th><th>1ºB</th><th>2ºB</th><th>3ºB</th><th>4ºB</th><th>Média</th><th>Faltas</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaCorpoPreview"></tbody>
+            </table>
+        </div>
+        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
+            <button id="btnBaixarPDFConfirmado" style="background-color: #28a745; color: white; margin:0;">📄 PDF</button>
+            <button id="btnFecharPreview" style="background-color: #32066d; color: white; margin:0;">Fechar</button>
+        </div>
+    </div>
+
     <a href="index.html" class="btn-logout">Sair do sistema</a>
 </div>
 

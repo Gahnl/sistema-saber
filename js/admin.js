@@ -1,5 +1,5 @@
 import { auth, db, firebaseConfig } from "/js/firebase.js";
-import { ref, set, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+import { ref, set, get, remove, onValue } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 import { onAuthStateChanged, getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 
@@ -12,20 +12,127 @@ onAuthStateChanged(auth, async (user) => {
         const snap = await get(ref(db, "users/" + user.uid));
         if (!snap.exists() || snap.val().role !== "admin") {
             window.location.href = "index.html";
+        } else {
+            carregarListasUsuarios();
+            carregarAlunosDatalist();
         }
-    } catch (err) { 
-        window.location.href = "index.html"; 
-    }
+    } catch (err) { window.location.href = "index.html"; }
 });
 
 // ------------------------------------------------------------------
-// 🛠️ FUNÇÃO: CADASTRAR SEM DESLOGAR O ADMIN
+// 📋 GERENCIAMENTO DE EXIBIÇÃO (TOGGLES)
+// ------------------------------------------------------------------
+function setupToggles() {
+    const btnProf = document.getElementById("btnToggleProf");
+    const btnAlu = document.getElementById("btnToggleAlunos");
+    const contProf = document.getElementById("containerProfessores");
+    const contAlu = document.getElementById("containerAlunos");
+
+    btnProf?.addEventListener("click", () => {
+        const isHidden = contProf.style.display === "none";
+        contProf.style.display = isHidden ? "block" : "none";
+        contAlu.style.display = "none";
+        btnProf.textContent = isHidden ? "📁 Fechar Professores" : "📂 Ver Professores";
+    });
+
+    btnAlu?.addEventListener("click", () => {
+        const isHidden = contAlu.style.display === "none";
+        contAlu.style.display = isHidden ? "block" : "none";
+        contProf.style.display = "none";
+        btnAlu.textContent = isHidden ? "📁 Fechar Alunos" : "📂 Ver Alunos";
+    });
+}
+setupToggles();
+
+// ------------------------------------------------------------------
+// 🚀 FUNÇÃO PRINCIPAL: GERAR LISTA DA TURMA NA TELA
+// ------------------------------------------------------------------
+document.getElementById("btnGerarLista")?.addEventListener("click", async () => {
+    const serieSelecionada = document.getElementById("filtroSerie").value;
+    const container = document.getElementById("containerListaTurma");
+    const corpoTabela = document.getElementById("corpoListaTurma");
+    const titulo = document.getElementById("tituloListaTurma");
+
+    if (!serieSelecionada) {
+        alert("Por favor, selecione uma série para gerar a lista!");
+        return;
+    }
+
+    corpoTabela.innerHTML = "<tr><td colspan='2'>Buscando alunos...</td></tr>";
+    container.style.display = "block";
+    titulo.innerText = `Lista de Alunos - ${serieSelecionada}`;
+
+    try {
+        const snapshot = await get(ref(db, "users"));
+        if (snapshot.exists()) {
+            const usuarios = snapshot.val();
+            let htmlContent = "";
+            let cont = 0;
+
+            for (let id in usuarios) {
+                const u = usuarios[id];
+                if (u.role === "student" && u.serie === serieSelecionada) {
+                    htmlContent += `<tr><td>${u.name}</td><td>${u.email}</td></tr>`;
+                    cont++;
+                }
+            }
+            corpoTabela.innerHTML = cont > 0 ? htmlContent : "<tr><td colspan='2'>Nenhum aluno cadastrado nesta série.</td></tr>";
+        }
+    } catch (error) {
+        alert("Erro ao carregar lista: " + error.message);
+    }
+});
+
+document.getElementById("btnFecharListaTurma")?.addEventListener("click", () => {
+    document.getElementById("containerListaTurma").style.display = "none";
+});
+
+// ------------------------------------------------------------------
+// 📋 LISTAR USUÁRIOS DO FIREBASE (ADMINISTRAÇÃO)
+// ------------------------------------------------------------------
+function carregarListasUsuarios() {
+    const listaProf = document.getElementById("listaProfessores");
+    const listaAlu = document.getElementById("listaAlunosCadastrados");
+
+    onValue(ref(db, "users"), (snapshot) => {
+        if (!snapshot.exists()) return;
+        const usuarios = snapshot.val();
+        listaProf.innerHTML = "";
+        listaAlu.innerHTML = "";
+
+        for (let uid in usuarios) {
+            const user = usuarios[uid];
+            const tr = document.createElement("tr");
+
+            if (user.role === "teacher") {
+                const mat = user.subjects ? Object.keys(user.subjects).join(", ") : "-";
+                const tur = user.classes ? Object.keys(user.classes).join(", ") : "-";
+                tr.innerHTML = `<td>${user.name}</td><td>${user.email}</td><td>${mat} / ${tur}</td>
+                                <td><button onclick="removerUser('${uid}')" class="btn-delete">Excluir</button></td>`;
+                listaProf.appendChild(tr);
+            } else if (user.role === "student") {
+                tr.innerHTML = `<td>${user.name}</td><td>${user.email}</td><td>${user.serie || "-"}</td>
+                                <td><button onclick="removerUser('${uid}')" class="btn-delete">Excluir</button></td>`;
+                listaAlu.appendChild(tr);
+            }
+        }
+    });
+}
+
+window.removerUser = async (uid) => {
+    if (confirm("Deseja realmente excluir este usuário?")) {
+        try { await remove(ref(db, "users/" + uid)); alert("Removido!"); } 
+        catch (e) { alert("Erro: " + e.message); }
+    }
+};
+
+// ------------------------------------------------------------------
+// 🛠️ LÓGICA DE CADASTRO
 // ------------------------------------------------------------------
 async function criarUsuarioNoSecondaryApp(email, senha, dadosPublicos) {
     const appName = "TempRegistration_" + Date.now();
     const tempApp = initializeApp(firebaseConfig, appName);
     const tempAuth = getAuth(tempApp);
-    
     try {
         const uc = await createUserWithEmailAndPassword(tempAuth, email, senha);
         await set(ref(db, "users/" + uc.user.uid), dadosPublicos);
@@ -34,30 +141,58 @@ async function criarUsuarioNoSecondaryApp(email, senha, dadosPublicos) {
         return true;
     } catch (error) {
         await deleteApp(tempApp);
-        if (error.code === 'auth/weak-password') throw new Error("A senha deve ter pelo menos 6 caracteres.");
-        if (error.code === 'auth/email-already-in-use') throw new Error("Este e-mail já está em uso.");
-        if (error.code === 'auth/invalid-email') throw new Error("O e-mail digitado é inválido.");
         throw error;
     }
 }
 
+document.getElementById("btnCreateProf")?.addEventListener("click", async () => {
+    const name = document.getElementById("profName").value.trim();
+    const email = document.getElementById("profEmail").value.trim();
+    const senha = document.getElementById("profSenha").value.trim();
+    const materias = window.getMateriasSelecionadas();
+    const turmas = window.getTurmasSelecionadas();
+
+    if (!name || !email || !senha || materias.length === 0 || turmas.length === 0) return alert("Preencha todos os campos do professor!");
+
+    try {
+        const dados = {
+            name, email, role: "teacher", precisaTrocarSenha: true,
+            subjects: materias.reduce((acc, m) => { acc[m] = true; return acc; }, {}),
+            classes: turmas.reduce((acc, t) => { acc[t] = true; return acc; }, {})
+        };
+        await criarUsuarioNoSecondaryApp(email, senha, dados);
+        alert("Professor cadastrado com sucesso!");
+        location.reload();
+    } catch (e) { alert("Erro: " + e.message); }
+});
+
+document.getElementById("btnCreateAluno")?.addEventListener("click", async () => {
+    const name = document.getElementById("alunoName").value.trim();
+    const email = document.getElementById("alunoEmail").value.trim();
+    const senha = document.getElementById("alunoSenha").value.trim();
+    const serie = document.getElementById("alunoSerie").value;
+    if (!name || !email || !senha || !serie) return alert("Preencha todos os campos do aluno!");
+    try {
+        await criarUsuarioNoSecondaryApp(email, senha, { name, email, role: "student", serie, precisaTrocarSenha: true });
+        alert("Aluno cadastrado com sucesso!");
+        location.reload();
+    } catch (e) { alert("Erro: " + e.message); }
+});
+
 // ------------------------------------------------------------------
-// MULTI SELECTS (TURMAS E MATÉRIAS)
+// MULTISELECT E BUSCA
 // ------------------------------------------------------------------
 function setupMultiSelect(fieldId, listId) {
     const field = document.getElementById(fieldId);
     const list = document.getElementById(listId);
-    if (field && list) {
-        field.addEventListener("click", (e) => {
-            e.stopPropagation();
-            list.style.display = list.style.display === "block" ? "none" : "block";
-        });
-        document.addEventListener("click", (e) => { 
-            if (!field.contains(e.target) && !list.contains(e.target)) list.style.display = "none"; 
-        });
-    }
+    field?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        list.style.display = list.style.display === "block" ? "none" : "block";
+    });
+    document.addEventListener("click", (e) => { 
+        if (!field?.contains(e.target) && !list?.contains(e.target)) list.style.display = "none"; 
+    });
 }
-
 setupMultiSelect("multiSelectField", "multiSelectList");
 setupMultiSelect("multiSelectMateriaField", "multiSelectMateriaList");
 
@@ -74,86 +209,28 @@ document.getElementById("multiSelectMateriaList")?.addEventListener("change", ()
     document.getElementById("multiSelectMateriaField").textContent = sel.length ? sel.join(", ") : "Selecione as matérias";
 });
 
-// ------------------------------------------------------------------
-// CADASTRAR PROFESSOR (COM VALIDAÇÃO DE DUPLICIDADE)
-// ------------------------------------------------------------------
-document.getElementById("btnCreateProf")?.addEventListener("click", async () => {
-    const name = document.getElementById("profName").value.trim();
-    const email = document.getElementById("profEmail").value.trim();
-    const senha = document.getElementById("profSenha").value.trim();
-    const materiasSelecionadas = window.getMateriasSelecionadas();
-    const turmasSelecionadas = window.getTurmasSelecionadas();
-
-    if (!name || !email || !senha || materiasSelecionadas.length === 0 || turmasSelecionadas.length === 0) {
-        return alert("Preencha todos os campos!");
-    }
-
-    try {
-        // --- INÍCIO DA VALIDAÇÃO DE DUPLICIDADE ---
-        const usersSnap = await get(ref(db, "users"));
-        const usuarios = usersSnap.val() || {};
-        
-        for (let uid in usuarios) {
-            const user = usuarios[uid];
-            if (user.role === "teacher") {
-                for (let turma of turmasSelecionadas) {
-                    // Verifica se o professor já tem essa turma
-                    if (user.classes && user.classes[turma]) {
-                        for (let materia of materiasSelecionadas) {
-                            // Verifica se ele também já tem essa matéria nessa turma
-                            if (user.subjects && user.subjects[materia]) {
-                                return alert(`⚠️ Erro: O professor(a) "${user.name}" já é o titular de "${materia}" na turma "${turma}".`);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        // --- FIM DA VALIDAÇÃO ---
-
-        const dados = {
-            name, email, role: "teacher", precisaTrocarSenha: true,
-            subjects: materiasSelecionadas.reduce((acc, m) => { acc[m] = true; return acc; }, {}),
-            classes: turmasSelecionadas.reduce((acc, t) => { acc[t] = true; return acc; }, {})
-        };
-        
-        await criarUsuarioNoSecondaryApp(email, senha, dados);
-        alert("Professor cadastrado com sucesso!");
-        location.reload();
-    } catch (e) { 
-        alert("Erro: " + e.message); 
-    }
-});
+// Busca nas tabelas
+const setupSearch = (inputId, tableBodyId) => {
+    document.getElementById(inputId)?.addEventListener("keyup", (e) => {
+        const term = e.target.value.toLowerCase();
+        const rows = document.getElementById(tableBodyId).querySelectorAll("tr");
+        rows.forEach(row => row.style.display = row.innerText.toLowerCase().includes(term) ? "" : "none");
+    });
+};
+setupSearch("buscaProf", "listaProfessores");
+setupSearch("buscaAluno", "listaAlunosCadastrados");
 
 // ------------------------------------------------------------------
-// CADASTRAR ALUNO
-// ------------------------------------------------------------------
-document.getElementById("btnCreateAluno")?.addEventListener("click", async () => {
-    const name = document.getElementById("alunoName").value.trim();
-    const email = document.getElementById("alunoEmail").value.trim();
-    const senha = document.getElementById("alunoSenha").value.trim();
-    const serie = document.getElementById("alunoSerie").value;
-    if (!name || !email || !senha || !serie) return alert("Preencha tudo!");
-    try {
-        const dados = { name, email, role: "student", serie, precisaTrocarSenha: true };
-        await criarUsuarioNoSecondaryApp(email, senha, dados);
-        alert("Aluno cadastrado!");
-        location.reload();
-    } catch (e) { alert("Erro: " + e.message); }
-});
-
-// ------------------------------------------------------------------
-// VISUALIZAR BOLETIM E PDF
+// BOLETIM E PDF
 // ------------------------------------------------------------------
 let dadosGlobaisBoletim = [];
 let alunoSelecionadoNome = "";
 
-document.getElementById("btnVisualizarBoletim").addEventListener("click", async () => {
+document.getElementById("btnVisualizarBoletim")?.addEventListener("click", async () => {
     const nome = document.getElementById("filtroAluno").value.trim();
     const serie = document.getElementById("filtroSerie").value;
     const corpo = document.getElementById("tabelaCorpoPreview");
-
-    if (!nome || !serie) return alert("Selecione o Aluno e a Série!");
+    if (!nome || !serie) return alert("Selecione Aluno e Série!");
 
     try {
         const usersSnap = await get(ref(db, "users"));
@@ -177,68 +254,28 @@ document.getElementById("btnVisualizarBoletim").addEventListener("click", async 
                 const dado = notas[mat] ? notas[mat][b] : null;
                 const nota = dado ? (dado.media || "0") : "-";
                 nBims.push(nota);
-                if(dado) {
-                    somaMedias += parseFloat(dado.media || 0);
-                    totalFaltas += parseInt(dado.faltas || 0);
-                    bimsComNota++;
-                }
+                if(dado) { somaMedias += parseFloat(dado.media); totalFaltas += parseInt(dado.faltas); bimsComNota++; }
             }
             const mediaFinal = bimsComNota > 0 ? (somaMedias / bimsComNota).toFixed(1) : "-";
-            const corMedia = (mediaFinal !== "-" && parseFloat(mediaFinal) < 6) ? "red" : "blue";
-
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td style="text-align:left; padding:10px;"><b>${mat}</b></td>
-                <td>${nBims[0]}</td><td>${nBims[1]}</td><td>${nBims[2]}</td><td>${nBims[3]}</td>
-                <td style="color:${corMedia}; font-weight:bold;">${mediaFinal}</td><td>${totalFaltas}</td>`;
+            tr.innerHTML = `<td>${mat}</td><td>${nBims[0]}</td><td>${nBims[1]}</td><td>${nBims[2]}</td><td>${nBims[3]}</td><td>${mediaFinal}</td><td>${totalFaltas}</td>`;
             corpo.appendChild(tr);
             dadosGlobaisBoletim.push([mat, nBims[0], nBims[1], nBims[2], nBims[3], mediaFinal, totalFaltas]);
         });
         document.getElementById("areaPreview").style.display = "block";
-        document.getElementById("areaPreview").scrollIntoView({ behavior: 'smooth' });
-    } catch (err) { alert("Erro ao carregar prévia: " + err.message); }
+    } catch (e) { alert("Erro ao carregar boletim."); }
 });
 
-// --- FUNÇÃO DE DOWNLOAD DO PDF ---
-document.getElementById("btnBaixarPDFConfirmado").addEventListener("click", () => {
-    const jsPDFRef = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (window.jsPDF ? window.jsPDF : null);
-    if (!jsPDFRef) return alert("Erro: Biblioteca de PDF não carregada!");
-    if (dadosGlobaisBoletim.length === 0) return alert("Visualize os dados primeiro!");
-
-    try {
-        const doc = new jsPDFRef();
-        const serie = document.getElementById("filtroSerie").value;
-        doc.setFontSize(18);
-        doc.setTextColor(50, 6, 109);
-        doc.text("COLÉGIO SABER", 105, 15, { align: "center" });
-        doc.setFontSize(12);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`BOLETIM ANUAL - ${alunoSelecionadoNome} (${serie})`, 105, 25, { align: "center" });
-        doc.autoTable({
-            startY: 35,
-            head: [['Matéria', '1ºB', '2ºB', '3ºB', '4ºB', 'Média', 'Faltas']],
-            body: dadosGlobaisBoletim,
-            theme: 'grid',
-            headStyles: { fillColor: [50, 6, 109], textColor: [248, 240, 8] },
-            styles: { halign: 'center' },
-            didDrawCell: (data) => {
-                if (data.section === 'body' && data.column.index === 5) {
-                    const v = parseFloat(data.cell.raw);
-                    if (!isNaN(v)) doc.setTextColor(v < 6 ? 255 : 0, 0, v < 6 ? 0 : 255);
-                    else doc.setTextColor(0, 0, 0);
-                }
-            }
-        });
-        doc.save(`Boletim_${alunoSelecionadoNome.replace(/\s+/g, '_')}.pdf`);
-    } catch (e) { alert("Erro ao gerar PDF: " + e.message); }
+document.getElementById("btnBaixarPDFConfirmado")?.addEventListener("click", () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("BOLETIM - COLÉGIO SABER", 10, 10);
+    doc.autoTable({ head: [['Matéria', '1ºB', '2ºB', '3ºB', '4ºB', 'Média', 'Faltas']], body: dadosGlobaisBoletim });
+    doc.save(`Boletim_${alunoSelecionadoNome}.pdf`);
 });
 
-document.getElementById("btnFecharPreview")?.addEventListener("click", () => {
-    document.getElementById("areaPreview").style.display = "none";
-});
+document.getElementById("btnFecharPreview")?.addEventListener("click", () => document.getElementById("areaPreview").style.display = "none");
 
-// ------------------------------------------------------------------
-// AUXILIARES
-// ------------------------------------------------------------------
 async function carregarAlunosDatalist() {
     const snap = await get(ref(db, "users"));
     const dados = snap.val();
@@ -253,17 +290,3 @@ async function carregarAlunosDatalist() {
         }
     }
 }
-carregarAlunosDatalist();
-
-document.getElementById("btnGerarLista")?.addEventListener("click", () => {
-    const m = document.getElementById("filtroMateria").value;
-    const s = document.getElementById("filtroSerie").value;
-    const b = document.getElementById("filtroBimestre").value;
-    if (!m || !s || !b) return alert("Filtros incompletos!");
-    localStorage.setItem("filtroMateria", m); 
-    localStorage.setItem("filtroSerie", s); 
-    localStorage.setItem("filtroBimestre", b);
-    window.location.href = "lista.html";
-});
-
-document.getElementById("btnVerUsuarios")?.addEventListener("click", () => window.location.href = "usuarios.html");

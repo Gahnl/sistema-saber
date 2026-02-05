@@ -1,3 +1,4 @@
+/* ================= GERAL ================= */
 body {
   font-family: Arial, sans-serif;
   background: linear-gradient(135deg, #f0f0f0, #ffffff);
@@ -47,7 +48,7 @@ header h1 {
 
 /* ================= CONTAINER ================= */
 .container {
-  max-width: 700px;
+  max-width: 750px;
   margin: 30px auto;
   background-color: white;
   padding: 20px 30px;
@@ -56,34 +57,33 @@ header h1 {
   text-align: left;
 }
 
-.container input[type="text"],
-.container input[type="email"],
-.container input[type="password"],
+.container input,
 .container select,
-.container input[type="date"],
 .container textarea {
   width: 100%;
   padding: 10px;
   margin: 8px 0;
   border-radius: 6px;
   border: 1px solid #ccc;
-  box-sizing: border-box; /* Garante que o padding não aumente o tamanho real */
+  box-sizing: border-box;
 }
 
+/* Botões Amarelos (Cadastrar) */
 .container button {
   display: block;
   margin: 14px auto 0 auto;
-  padding: 10px 16px;
+  padding: 10px 25px;
   background-color: #f8f008;
   border: none;
   color: #32066d;
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
+  transition: 0.3s;
 }
 
 .container button:hover {
-  background-color: #f9f630;
+  background-color: #e6de07;
 }
 
 /* ================= FORM CARDS ================= */
@@ -92,106 +92,144 @@ header h1 {
   padding: 25px;
   margin: 20px 0;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  position: relative; /* Necessário para conter os multi-selects */
+  background: white;
 }
 
-/* ==========================================================
-   MULTI-SELECT (TURMAS E MATÉRIAS)
-   ========================================================== */
+/* ================= MULTI-SELECT ================= */
 .multi-select {
   position: relative;
   width: 100%;
   margin-bottom: 15px;
-  z-index: 10; /* Camada base */
-}
-
-/* 🔥 O segredo: O primeiro menu (Matérias) tem prioridade sobre o segundo (Turmas) */
-.multi-select:first-of-type {
-  z-index: 20; 
 }
 
 .multi-select-field {
-  width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
   background: white;
   cursor: pointer;
-  font-size: 14px;
-  color: #444;
   position: relative;
-  box-sizing: border-box;
 }
 
 .multi-select-field::after {
   content: "▼";
   position: absolute;
   right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
   color: #32066d;
-  font-size: 12px;
 }
 
 .multi-select-list {
   display: none;
   position: absolute;
-  top: 100%;
-  left: 0;
   width: 100%;
   background: white;
   border: 1px solid #ccc;
   border-radius: 6px;
-  margin-top: 2px;
-  max-height: 170px;
+  z-index: 100;
+  max-height: 150px;
   overflow-y: auto;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  z-index: 9999 !important; /* Sempre no topo */
-  padding: 5px 0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 .multi-select-list label {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #444;
+  padding: 8px;
   gap: 10px;
-}
-
-.multi-select-list label:hover {
-  background: #f2f2f2;
-}
-
-/* Impede que o checkbox herde larguras de 100% dos inputs comuns */
-.multi-select-list input[type="checkbox"] {
-  width: auto !important;
-  margin: 0;
-}
-
-/* ================= BUTTONS & PDF ================= */
-.btn-acessar {
-  background-color: #f8f008;
-  color: #32066d;
-  padding: 10px 25px;
-  border-radius: 8px;
   cursor: pointer;
-  font-weight: bold;
 }
 
-.btn-logout {
-  display: block;
-  margin: 25px auto;
-  color: #32066d;
-  font-weight: bold;
+/* ================= BOTÕES ROXOS (GERENCIAMENTO/LISTA) ================= */
+.toggle-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.btn-toggle, #btnGerarLista {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  background-color: #32066d !important;
+  color: #f8f008 !important;
+  padding: 12px 20px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  font-weight: bold !important;
+  border: none !important;
+  min-width: 200px !important;
+  margin: 0 !important;
+}
+
+.btn-toggle:hover, #btnGerarLista:hover {
+  background-color: #450a96 !important;
+}
+
+/* Botão Verde (Boletim) */
+#btnVisualizarBoletim {
+  background-color: #28a745 !important;
+  color: white !important;
+}
+
+/* ================= BOTÃO SAIR (IGUAL AOS ROXOS) ================= */
+.logout-wrapper {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.btn-logout-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #32066d;
+  color: #f8f008 !important;
+  padding: 12px 30px;
+  border-radius: 8px;
   text-decoration: none;
+  font-weight: bold;
+  min-width: 200px;
+  transition: 0.3s;
 }
 
-.btn-logout:hover {
-  text-decoration: underline;
+.btn-logout-card:hover {
+  background-color: #450a96;
+  color: #ffffff !important;
 }
 
+/* ================= TABELAS ================= */
+.table-wrapper {
+  overflow-x: auto;
+  margin-top: 15px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table th {
+  background-color: #32066d;
+  color: #f8f008;
+  padding: 12px;
+}
+
+table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+.btn-delete {
+  background-color: #ff4d4d !important;
+  color: white !important;
+  padding: 5px 10px !important;
+  font-size: 12px !important;
+}
+
+/* ================= RODAPÉ ================= */
 footer {
   margin-top: 30px;
   padding-bottom: 20px;
