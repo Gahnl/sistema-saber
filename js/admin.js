@@ -240,7 +240,7 @@ document.getElementById("btnVisualizarBoletim")?.addEventListener("click", async
 
         const gradesSnap = await get(ref(db, `grades/${alunoUID}`));
         const notas = gradesSnap.val() || {};
-        const materias = ["Matemática", "Português", "Arte", "História", "Geografia", "Informática", "Inglês", "Ciências", "Educação Física"];
+        const materias = ["Matemática", "Português", "Arte", "História", "Geografia", "Informática", "Inglês", "Ciências", "Educação Física", "Música", "Espanhol"];
         
         corpo.innerHTML = "";
         dadosGlobaisBoletim = [];
