@@ -22,40 +22,52 @@
         <input type="email" id="profEmail" placeholder="E-mail">
         <input type="password" id="profSenha" placeholder="Senha">
         
-        <label>Matérias:</label>
-        <div class="multi-select" id="multiSelectMaterias">
-            <div class="multi-select-field" id="multiSelectMateriaField">Selecione as matérias</div>
-            <div class="multi-select-list" id="multiSelectMateriaList" style="display:none;">
-                <label><input type="checkbox" value="Matemática"> Matemática</label>
-                <label><input type="checkbox" value="Português"> Português</label>
-                <label><input type="checkbox" value="Arte"> Arte</label>
-                <label><input type="checkbox" value="História"> História</label>
-                <label><input type="checkbox" value="Geografia"> Geografia</label>
-                <label><input type="checkbox" value="Informática"> Informática</label>
-                <label><input type="checkbox" value="Inglês"> Inglês</label>
-                <label><input type="checkbox" value="Ciências"> Ciências</label>
-                <label><input type="checkbox" value="Educação Física"> Educação Física</label>
-                <label><input type="checkbox" value="Música"> Música</label>
-                <label><input type="checkbox" value="Espanhol"> Espanhol</label>
+        <label>Vincular Turmas e Matérias:</label>
+        <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; border: 1px dashed #32066d; margin-bottom: 10px;">
+            
+            <label>Selecione as Turmas:</label>
+            <div class="multi-select" id="multiSelectTurmasAtribuicao" style="margin-bottom: 10px;">
+                <div class="multi-select-field" id="fieldTurmaAtribuicao">Selecionar Turmas</div>
+                <div class="multi-select-list" id="listTurmaAtribuicao" style="display:none;">
+                    <label><input type="checkbox" value="1º ano"> 1º ano</label>
+                    <label><input type="checkbox" value="2º ano"> 2º ano</label>
+                    <label><input type="checkbox" value="3º ano"> 3º ano</label>
+                    <label><input type="checkbox" value="4º ano"> 4º ano</label>
+                    <label><input type="checkbox" value="5º ano"> 5º ano</label>
+                    <label><input type="checkbox" value="6º ano"> 6º ano</label>
+                    <label><input type="checkbox" value="7º ano"> 7º ano</label>
+                    <label><input type="checkbox" value="8º ano"> 8º ano</label>
+                    <label><input type="checkbox" value="9º ano"> 9º ano</label>
+                </div>
             </div>
+
+            <label>Selecione as Matérias para as turmas acima:</label>
+            <div class="multi-select" id="multiSelectMateriasAtribuicao">
+                <div class="multi-select-field" id="fieldMatAtribuicao">Selecionar Matérias</div>
+                <div class="multi-select-list" id="listMatAtribuicao" style="display:none;">
+                    <label><input type="checkbox" value="Matemática"> Matemática</label>
+                    <label><input type="checkbox" value="Português"> Português</label>
+                    <label><input type="checkbox" value="Arte"> Arte</label>
+                    <label><input type="checkbox" value="História"> História</label>
+                    <label><input type="checkbox" value="Geografia"> Geografia</label>
+                    <label><input type="checkbox" value="Informática"> Informática</label>
+                    <label><input type="checkbox" value="Inglês"> Inglês</label>
+                    <label><input type="checkbox" value="Ciências"> Ciências</label>
+                    <label><input type="checkbox" value="Educação Física"> Educação Física</label>
+                    <label><input type="checkbox" value="Música"> Música</label>
+                    <label><input type="checkbox" value="Espanhol"> Espanhol</label>
+                </div>
+            </div>
+            
+            <button type="button" id="btnAddAtribuicao" style="background-color: #32066d; color: #fff; width: 100%; margin-top: 15px;">+ Vincular estas turmas e matérias</button>
         </div>
 
-        <label>Turmas:</label>
-        <div class="multi-select" id="multiSelectTurmas">
-            <div class="multi-select-field" id="multiSelectField">Selecione as turmas</div>
-            <div class="multi-select-list" id="multiSelectList" style="display:none;">
-                <label><input type="checkbox" value="1º ano"> 1º ano</label>
-                <label><input type="checkbox" value="2º ano"> 2º ano</label>
-                <label><input type="checkbox" value="3º ano"> 3º ano</label>
-                <label><input type="checkbox" value="4º ano"> 4º ano</label>
-                <label><input type="checkbox" value="5º ano"> 5º ano</label>
-                <label><input type="checkbox" value="6º ano"> 6º ano</label>
-                <label><input type="checkbox" value="7º ano"> 7º ano</label>
-                <label><input type="checkbox" value="8º ano"> 8º ano</label>
-                <label><input type="checkbox" value="9º ano"> 9º ano</label>
-            </div>
+        <div id="previewAtribuicoes" style="margin-bottom: 15px; font-size: 14px; color: #32066d;">
+            <strong>Atribuições Adicionadas:</strong>
+            <ul id="listaAtribuidas" style="margin-top: 5px; padding-left: 20px;"></ul>
         </div>
-        <button id="btnCreateProf">Cadastrar Professor</button>
+
+        <button id="btnCreateProf">Finalizar Cadastro do Professor</button>
     </div>
 
     <hr>
@@ -89,7 +101,7 @@
         <div class="table-wrapper">
             <table>
                 <thead>
-                    <tr><th>Nome</th><th>E-mail</th><th>Turmas/Matérias</th><th>Ações</th></tr>
+                    <tr><th>Nome</th><th>E-mail</th><th>Atribuições</th><th>Ações</th></tr>
                 </thead>
                 <tbody id="listaProfessores"></tbody>
             </table>

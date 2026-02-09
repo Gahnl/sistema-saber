@@ -3,6 +3,9 @@ import { ref, set, get, remove, onValue } from "https://www.gstatic.com/firebase
 import { onAuthStateChanged, getAuth, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 
+// Variável para armazenar as atribuições temporárias { "4º ano": ["Matemática"], "5º ano": ["Arte"] }
+let atribuicoesProfessor = {};
+
 // ------------------------------------------------------------------
 // 🔒 PROTEÇÃO DE ROTA
 // ------------------------------------------------------------------
@@ -45,7 +48,7 @@ function setupToggles() {
 setupToggles();
 
 // ------------------------------------------------------------------
-// 🚀 FUNÇÃO PRINCIPAL: GERAR LISTA DA TURMA NA TELA
+// 🚀 LISTAR ALUNOS DA TURMA
 // ------------------------------------------------------------------
 document.getElementById("btnGerarLista")?.addEventListener("click", async () => {
     const serieSelecionada = document.getElementById("filtroSerie").value;
@@ -54,13 +57,13 @@ document.getElementById("btnGerarLista")?.addEventListener("click", async () => 
     const titulo = document.getElementById("tituloListaTurma");
 
     if (!serieSelecionada) {
-        alert("Por favor, selecione uma série para gerar a lista!");
+        alert("Por favor, selecione uma série!");
         return;
     }
 
-    corpoTabela.innerHTML = "<tr><td colspan='2'>Buscando alunos...</td></tr>";
+    corpoTabela.innerHTML = "<tr><td colspan='2'>Buscando...</td></tr>";
     container.style.display = "block";
-    titulo.innerText = `Lista de Alunos - ${serieSelecionada}`;
+    titulo.innerText = `Lista - ${serieSelecionada}`;
 
     try {
         const snapshot = await get(ref(db, "users"));
@@ -68,7 +71,6 @@ document.getElementById("btnGerarLista")?.addEventListener("click", async () => 
             const usuarios = snapshot.val();
             let htmlContent = "";
             let cont = 0;
-
             for (let id in usuarios) {
                 const u = usuarios[id];
                 if (u.role === "student" && u.serie === serieSelecionada) {
@@ -76,19 +78,13 @@ document.getElementById("btnGerarLista")?.addEventListener("click", async () => 
                     cont++;
                 }
             }
-            corpoTabela.innerHTML = cont > 0 ? htmlContent : "<tr><td colspan='2'>Nenhum aluno cadastrado nesta série.</td></tr>";
+            corpoTabela.innerHTML = cont > 0 ? htmlContent : "<tr><td colspan='2'>Nenhum aluno nesta série.</td></tr>";
         }
-    } catch (error) {
-        alert("Erro ao carregar lista: " + error.message);
-    }
-});
-
-document.getElementById("btnFecharListaTurma")?.addEventListener("click", () => {
-    document.getElementById("containerListaTurma").style.display = "none";
+    } catch (error) { alert(error.message); }
 });
 
 // ------------------------------------------------------------------
-// 📋 LISTAR USUÁRIOS DO FIREBASE (ADMINISTRAÇÃO)
+// 📋 LISTAR USUÁRIOS
 // ------------------------------------------------------------------
 function carregarListasUsuarios() {
     const listaProf = document.getElementById("listaProfessores");
@@ -105,9 +101,13 @@ function carregarListasUsuarios() {
             const tr = document.createElement("tr");
 
             if (user.role === "teacher") {
-                const mat = user.subjects ? Object.keys(user.subjects).join(", ") : "-";
-                const tur = user.classes ? Object.keys(user.classes).join(", ") : "-";
-                tr.innerHTML = `<td>${user.name}</td><td>${user.email}</td><td>${mat} / ${tur}</td>
+                let atribStr = "-";
+                if (user.atribuicoes) {
+                    atribStr = Object.entries(user.atribuicoes)
+                        .map(([turma, mats]) => `${turma} (${mats.join(", ")})`)
+                        .join(" | ");
+                }
+                tr.innerHTML = `<td>${user.name}</td><td>${user.email}</td><td>${atribStr}</td>
                                 <td><button onclick="removerUser('${uid}')" class="btn-delete">Excluir</button></td>`;
                 listaProf.appendChild(tr);
             } else if (user.role === "student") {
@@ -120,9 +120,9 @@ function carregarListasUsuarios() {
 }
 
 window.removerUser = async (uid) => {
-    if (confirm("Deseja realmente excluir este usuário?")) {
+    if (confirm("Deseja realmente excluir?")) {
         try { await remove(ref(db, "users/" + uid)); alert("Removido!"); } 
-        catch (e) { alert("Erro: " + e.message); }
+        catch (e) { alert(e.message); }
     }
 };
 
@@ -145,25 +145,54 @@ async function criarUsuarioNoSecondaryApp(email, senha, dadosPublicos) {
     }
 }
 
+// Lógica de Atribuição (Vincular Múltiplas Turmas + Múltiplas Matérias)
+document.getElementById("btnAddAtribuicao")?.addEventListener("click", () => {
+    const checksTurmas = document.querySelectorAll("#listTurmaAtribuicao input:checked");
+    const checksMaterias = document.querySelectorAll("#listMatAtribuicao input:checked");
+    
+    const turmasSelecionadas = Array.from(checksTurmas).map(c => c.value);
+    const materiasSelecionadas = Array.from(checksMaterias).map(c => c.value);
+
+    if (turmasSelecionadas.length === 0 || materiasSelecionadas.length === 0) {
+        return alert("Selecione pelo menos uma turma e uma matéria!");
+    }
+
+    turmasSelecionadas.forEach(turma => {
+        atribuicoesProfessor[turma] = materiasSelecionadas;
+    });
+
+    const listaUI = document.getElementById("listaAtribuidas");
+    listaUI.innerHTML = "";
+    for (let t in atribuicoesProfessor) {
+        const li = document.createElement("li");
+        li.innerHTML = `<b>${t}:</b> ${atribuicoesProfessor[t].join(", ")}`;
+        listaUI.appendChild(li);
+    }
+
+    // Limpa campos
+    checksTurmas.forEach(c => c.checked = false);
+    checksMaterias.forEach(c => c.checked = false);
+    document.getElementById("fieldTurmaAtribuicao").textContent = "Selecionar Turmas";
+    document.getElementById("fieldMatAtribuicao").textContent = "Selecionar Matérias";
+});
+
 document.getElementById("btnCreateProf")?.addEventListener("click", async () => {
     const name = document.getElementById("profName").value.trim();
     const email = document.getElementById("profEmail").value.trim();
     const senha = document.getElementById("profSenha").value.trim();
-    const materias = window.getMateriasSelecionadas();
-    const turmas = window.getTurmasSelecionadas();
 
-    if (!name || !email || !senha || materias.length === 0 || turmas.length === 0) return alert("Preencha todos os campos do professor!");
+    if (!name || !email || !senha || Object.keys(atribuicoesProfessor).length === 0) 
+        return alert("Preencha tudo e adicione ao menos uma atribuição!");
 
     try {
         const dados = {
             name, email, role: "teacher", precisaTrocarSenha: true,
-            subjects: materias.reduce((acc, m) => { acc[m] = true; return acc; }, {}),
-            classes: turmas.reduce((acc, t) => { acc[t] = true; return acc; }, {})
+            atribuicoes: atribuicoesProfessor
         };
         await criarUsuarioNoSecondaryApp(email, senha, dados);
-        alert("Professor cadastrado com sucesso!");
+        alert("Professor cadastrado!");
         location.reload();
-    } catch (e) { alert("Erro: " + e.message); }
+    } catch (e) { alert(e.message); }
 });
 
 document.getElementById("btnCreateAluno")?.addEventListener("click", async () => {
@@ -171,12 +200,12 @@ document.getElementById("btnCreateAluno")?.addEventListener("click", async () =>
     const email = document.getElementById("alunoEmail").value.trim();
     const senha = document.getElementById("alunoSenha").value.trim();
     const serie = document.getElementById("alunoSerie").value;
-    if (!name || !email || !senha || !serie) return alert("Preencha todos os campos do aluno!");
+    if (!name || !email || !senha || !serie) return alert("Preencha tudo!");
     try {
         await criarUsuarioNoSecondaryApp(email, senha, { name, email, role: "student", serie, precisaTrocarSenha: true });
-        alert("Aluno cadastrado com sucesso!");
+        alert("Aluno cadastrado!");
         location.reload();
-    } catch (e) { alert("Erro: " + e.message); }
+    } catch (e) { alert(e.message); }
 });
 
 // ------------------------------------------------------------------
@@ -193,23 +222,25 @@ function setupMultiSelect(fieldId, listId) {
         if (!field?.contains(e.target) && !list?.contains(e.target)) list.style.display = "none"; 
     });
 }
-setupMultiSelect("multiSelectField", "multiSelectList");
-setupMultiSelect("multiSelectMateriaField", "multiSelectMateriaList");
 
-window.getTurmasSelecionadas = () => [...document.querySelectorAll("#multiSelectList input:checked")].map(chk => chk.value);
-window.getMateriasSelecionadas = () => [...document.querySelectorAll("#multiSelectMateriaList input:checked")].map(chk => chk.value);
+// Inicialização dos campos multiselect
+setupMultiSelect("fieldTurmaAtribuicao", "listTurmaAtribuicao");
+setupMultiSelect("fieldMatAtribuicao", "listMatAtribuicao");
 
-document.getElementById("multiSelectList")?.addEventListener("change", () => {
-    const sel = window.getTurmasSelecionadas();
-    document.getElementById("multiSelectField").textContent = sel.length ? sel.join(", ") : "Selecione as turmas";
+// Atualiza texto do campo multiselect de turmas
+document.getElementById("listTurmaAtribuicao")?.addEventListener("change", () => {
+    const checks = document.querySelectorAll("#listTurmaAtribuicao input:checked");
+    const sel = Array.from(checks).map(c => c.value);
+    document.getElementById("fieldTurmaAtribuicao").textContent = sel.length ? sel.join(", ") : "Selecionar Turmas";
 });
 
-document.getElementById("multiSelectMateriaList")?.addEventListener("change", () => {
-    const sel = window.getMateriasSelecionadas();
-    document.getElementById("multiSelectMateriaField").textContent = sel.length ? sel.join(", ") : "Selecione as matérias";
+// Atualiza texto do campo multiselect de matérias
+document.getElementById("listMatAtribuicao")?.addEventListener("change", () => {
+    const checks = document.querySelectorAll("#listMatAtribuicao input:checked");
+    const sel = Array.from(checks).map(c => c.value);
+    document.getElementById("fieldMatAtribuicao").textContent = sel.length ? sel.join(", ") : "Selecionar Matérias";
 });
 
-// Busca nas tabelas
 const setupSearch = (inputId, tableBodyId) => {
     document.getElementById(inputId)?.addEventListener("keyup", (e) => {
         const term = e.target.value.toLowerCase();
