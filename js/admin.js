@@ -109,7 +109,6 @@ window.prepararEdicaoProf = async (uid) => {
         document.getElementById("profSenha").placeholder = "Bloqueado na edição";
         document.getElementById("profSenha").disabled = true; 
 
-        // IMPORTANTE: Carregamos as atribuições que já existem no banco para a memória
         atribuicoesProfessor = JSON.parse(JSON.stringify(prof.atribuicoes || {}));
         editandoProfessorUid = uid;
 
@@ -170,7 +169,6 @@ document.getElementById("btnCreateProf")?.addEventListener("click", async () => 
 
     try {
         if (editandoProfessorUid) {
-            // MODO EDIÇÃO - USANDO UPDATE MULTI-PATH (Mais seguro)
             const updates = {};
             updates[`/users/${editandoProfessorUid}/name`] = name;
             updates[`/users/${editandoProfessorUid}/atribuicoes`] = atribuicoesProfessor;
@@ -178,7 +176,6 @@ document.getElementById("btnCreateProf")?.addEventListener("click", async () => 
             await update(ref(db), updates);
             alert("Professor atualizado com sucesso!");
         } else {
-            // MODO CADASTRO NOVO
             if (!senha) return alert("Senha é obrigatória!");
             const dados = { name, email, role: "teacher", atribuicoes: atribuicoesProfessor, precisaTrocarSenha: true };
             await criarUsuarioNoSecondaryApp(email, senha, dados);
@@ -204,7 +201,6 @@ function resetarFormularioProf() {
     document.getElementById("listaAtribuidas").innerHTML = "";
     document.getElementById("fieldTurmaAtribuicao").textContent = "Selecionar Turmas";
     document.getElementById("fieldMatAtribuicao").textContent = "Selecionar Matérias";
-    // Não damos reload() imediatamente para o alert não sumir antes do usuário ler
 }
 
 // ------------------------------------------------------------------
@@ -281,6 +277,43 @@ const setupSearch = (inputId, tableBodyId) => {
 };
 setupSearch("buscaProf", "listaProfessores");
 setupSearch("buscaAluno", "listaAlunosCadastrados");
+
+// --- Nova Função: Abrir Lista da Turma ---
+document.getElementById("btnGerarLista")?.addEventListener("click", async () => {
+    const serie = document.getElementById("filtroSerie").value;
+    const corpo = document.getElementById("corpoListaTurma");
+    const container = document.getElementById("containerListaTurma");
+    const titulo = document.getElementById("tituloListaTurma");
+
+    if (!serie) return alert("Selecione a turma para gerar a lista!");
+
+    try {
+        const snap = await get(ref(db, "users"));
+        const usuarios = snap.val();
+        corpo.innerHTML = "";
+        titulo.innerText = `Alunos Matriculados - ${serie}`;
+
+        let encontrou = false;
+        for (let uid in usuarios) {
+            const u = usuarios[uid];
+            if (u.role === "student" && u.serie === serie) {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `<td>${u.name}</td><td>${u.email}</td>`;
+                corpo.appendChild(tr);
+                encontrou = true;
+            }
+        }
+
+        if (!encontrou) {
+            corpo.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Nenhum aluno encontrado nesta turma.</td></tr>";
+        }
+
+        container.style.display = "block";
+        container.scrollIntoView({ behavior: 'smooth' });
+    } catch (e) {
+        alert("Erro ao buscar lista.");
+    }
+});
 
 // --- Visualização do Boletim ---
 let dadosGlobaisBoletim = [];
