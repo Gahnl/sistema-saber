@@ -57,12 +57,18 @@ function carregarListasUsuarios() {
 
     onValue(ref(db, "users"), (snapshot) => {
         if (!snapshot.exists()) return;
-        const usuarios = snapshot.val();
+        const usuariosObj = snapshot.val();
+        
+        const usuariosOrdenados = Object.keys(usuariosObj).map(uid => ({
+            uid: uid,
+            ...usuariosObj[uid]
+        })).sort((a, b) => (a.name || "").localeCompare(b.name || "", 'pt-BR'));
+
         listaProf.innerHTML = "";
         listaAlu.innerHTML = "";
 
-        for (let uid in usuarios) {
-            const user = usuarios[uid];
+        usuariosOrdenados.forEach((user) => {
+            const uid = user.uid;
             const tr = document.createElement("tr");
 
             if (user.role === "teacher") {
@@ -89,7 +95,7 @@ function carregarListasUsuarios() {
                     <td><button onclick="removerUser('${uid}')" class="btn-delete">Excluir</button></td>`;
                 listaAlu.appendChild(tr);
             }
-        }
+        });
     });
 }
 
@@ -203,9 +209,6 @@ function resetarFormularioProf() {
     document.getElementById("fieldMatAtribuicao").textContent = "Selecionar Matérias";
 }
 
-// ------------------------------------------------------------------
-// 🚀 MULTISELECT DINÂMICO (TEXTO VISUAL)
-// ------------------------------------------------------------------
 function setupMultiSelect(fieldId, listId, defaultText) {
     const field = document.getElementById(fieldId);
     const list = document.getElementById(listId);
@@ -230,10 +233,6 @@ function setupMultiSelect(fieldId, listId, defaultText) {
 
 setupMultiSelect("fieldTurmaAtribuicao", "listTurmaAtribuicao", "Selecionar Turmas");
 setupMultiSelect("fieldMatAtribuicao", "listMatAtribuicao", "Selecionar Matérias");
-
-// ------------------------------------------------------------------
-// 🚀 OUTRAS FUNÇÕES (ALUNOS, PDF, BUSCA)
-// ------------------------------------------------------------------
 
 async function criarUsuarioNoSecondaryApp(email, senha, dadosPublicos) {
     const appName = "TempApp_" + Date.now();
@@ -278,7 +277,6 @@ const setupSearch = (inputId, tableBodyId) => {
 setupSearch("buscaProf", "listaProfessores");
 setupSearch("buscaAluno", "listaAlunosCadastrados");
 
-// --- Nova Função: Abrir Lista da Turma ---
 document.getElementById("btnGerarLista")?.addEventListener("click", async () => {
     const serie = document.getElementById("filtroSerie").value;
     const corpo = document.getElementById("corpoListaTurma");
@@ -289,33 +287,30 @@ document.getElementById("btnGerarLista")?.addEventListener("click", async () => 
 
     try {
         const snap = await get(ref(db, "users"));
-        const usuarios = snap.val();
+        const usuariosObj = snap.val();
         corpo.innerHTML = "";
         titulo.innerText = `Alunos Matriculados - ${serie}`;
 
-        let encontrou = false;
-        for (let uid in usuarios) {
-            const u = usuarios[uid];
-            if (u.role === "student" && u.serie === serie) {
+        const alunosOrdenados = Object.values(usuariosObj)
+            .filter(u => u.role === "student" && u.serie === serie)
+            .sort((a, b) => (a.name || "").localeCompare(b.name || "", 'pt-BR'));
+
+        if (alunosOrdenados.length === 0) {
+            corpo.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Nenhum aluno encontrado nesta turma.</td></tr>";
+        } else {
+            alunosOrdenados.forEach(u => {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `<td>${u.name}</td><td>${u.email}</td>`;
                 corpo.appendChild(tr);
-                encontrou = true;
-            }
-        }
-
-        if (!encontrou) {
-            corpo.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Nenhum aluno encontrado nesta turma.</td></tr>";
+            });
         }
 
         container.style.display = "block";
         container.scrollIntoView({ behavior: 'smooth' });
-    } catch (e) {
-        alert("Erro ao buscar lista.");
-    }
+    } catch (e) { alert("Erro ao buscar lista."); }
 });
 
-// --- Visualização do Boletim ---
+// --- Visualização do Boletim (MATÉRIAS DINÂMICAS) ---
 let dadosGlobaisBoletim = [];
 let alunoSelecionadoNome = "";
 
@@ -331,23 +326,43 @@ document.getElementById("btnVisualizarBoletim")?.addEventListener("click", async
         let alunoUID = Object.keys(users).find(uid => users[uid].name === nome);
         if (!alunoUID) return alert("Aluno não encontrado!");
 
+        // --- Lógica de Matérias Dinâmicas ---
+        const todosUsuarios = Object.values(users);
+        const materiasDaTurma = new Set();
+
+        todosUsuarios.forEach(u => {
+            if (u.role === "teacher" && u.atribuicoes && u.atribuicoes[serie]) {
+                u.atribuicoes[serie].forEach(m => materiasDaTurma.add(m));
+            }
+        });
+
+        const listaFinalMaterias = Array.from(materiasDaTurma).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+        if (listaFinalMaterias.length === 0) {
+            return alert("Nenhuma matéria cadastrada para esta turma através dos professores.");
+        }
+        // ------------------------------------
+
         const gradesSnap = await get(ref(db, `grades/${alunoUID}`));
         const notas = gradesSnap.val() || {};
-        const materias = ["Matemática", "Português", "Arte", "História", "Geografia", "Informática", "Inglês", "Ciências", "Educação Física", "Música", "Espanhol"];
         
         corpo.innerHTML = "";
         dadosGlobaisBoletim = [];
         alunoSelecionadoNome = nome;
         document.getElementById("infoAlunoPreview").innerText = `${nome} - ${serie}`;
 
-        materias.forEach(mat => {
+        listaFinalMaterias.forEach(mat => {
             let somaMedias = 0, totalFaltas = 0, bimsComNota = 0;
             let nBims = [];
             for(let b=1; b<=4; b++) {
                 const dado = notas[mat] ? notas[mat][b] : null;
                 const nota = dado ? (dado.media || "0") : "-";
                 nBims.push(nota);
-                if(dado) { somaMedias += parseFloat(dado.media); totalFaltas += parseInt(dado.faltas); bimsComNota++; }
+                if(dado) { 
+                    somaMedias += parseFloat(dado.media); 
+                    totalFaltas += parseInt(dado.faltas); 
+                    bimsComNota++; 
+                }
             }
             const mediaFinal = bimsComNota > 0 ? (somaMedias / bimsComNota).toFixed(1) : "-";
             const tr = document.createElement("tr");
@@ -374,12 +389,16 @@ async function carregarAlunosDatalist() {
     const dados = snap.val();
     const datalist = document.getElementById("listaAlunos");
     if (!dados || !datalist) return;
+
+    const nomesOrdenados = Object.values(dados)
+        .filter(u => u.role === "student")
+        .map(u => u.name)
+        .sort((a, b) => (a || "").localeCompare(b || "", 'pt-BR'));
+
     datalist.innerHTML = "";
-    for (let uid in dados) {
-        if (dados[uid].role === "student") {
-            const opt = document.createElement("option");
-            opt.value = dados[uid].name;
-            datalist.appendChild(opt);
-        }
-    }
+    nomesOrdenados.forEach(nome => {
+        const opt = document.createElement("option");
+        opt.value = nome;
+        datalist.appendChild(opt);
+    });
 }
