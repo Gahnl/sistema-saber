@@ -2,7 +2,7 @@ import { auth, db } from "/js/firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { ref, get, set, push, remove } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 
-// 🔒 PROTEÇÃO DE ROTA E VERIFICAÇÃO DE PERMISSÃO
+// 🔒 PROTEÇÃO DE ROTA
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         window.location.href = "index.html";
@@ -46,31 +46,37 @@ function iniciarSistemaProfessor(u) {
     const secaoNotas = document.getElementById("secaoNotas");
     const bimestreNotas = document.getElementById("bimestreNotas");
     const mensagemNotas = document.getElementById("mensagemNotas");
-    const btnGerarPDF = document.getElementById("btnGerarPDF");
-    const filtroBimestrePDF = document.getElementById("filtroBimestrePDF");
 
-    // POPULAR MATÉRIAS E TURMAS DO PROFESSOR
+    let idEdicaoAtual = null;
+
+    // 🛠️ FILTROS
     function inicializarFiltros() {
-        materiaSelect.innerHTML = '<option value="">Selecione a matéria</option>';
-        if (u.subjects) {
-            Object.keys(u.subjects).forEach(m => materiaSelect.add(new Option(m, m)));
-        } else if (u.materia) {
-            materiaSelect.add(new Option(u.materia, u.materia));
-        }
-
+        materiaSelect.innerHTML = '<option value="">Selecione a série primeiro</option>';
         serieSelect.innerHTML = '<option value="">Selecione a série</option>';
         serieFaltasSelect.innerHTML = '<option value="">Selecione a série</option>';
-        if (u.classes) {
-            Object.keys(u.classes).filter(k => u.classes[k]).sort().forEach(t => {
-                serieSelect.add(new Option(t, t));
-                serieFaltasSelect.add(new Option(t, t));
+        if (u.atribuicoes) {
+            Object.keys(u.atribuicoes).sort().forEach(turma => {
+                serieSelect.add(new Option(turma, turma));
+                serieFaltasSelect.add(new Option(turma, turma));
             });
         }
     }
 
+    serieSelect.addEventListener("change", () => {
+        const serieEscolhida = serieSelect.value;
+        materiaSelect.innerHTML = '<option value="">Selecione a matéria</option>';
+        if (serieEscolhida && u.atribuicoes[serieEscolhida]) {
+            const materiasDaTurma = u.atribuicoes[serieEscolhida];
+            if (Array.isArray(materiasDaTurma)) {
+                materiasDaTurma.forEach(m => materiaSelect.add(new Option(m, m)));
+            }
+        }
+        atualizarVisibilidadeNotas();
+    });
+
     inicializarFiltros();
 
-    // CONTROLE DE VISIBILIDADE DA SEÇÃO DE NOTAS
+    // 📊 NOTAS
     const atualizarVisibilidadeNotas = () => {
         if (bimestreNotas.value && materiaSelect.value && serieSelect.value) {
             secaoNotas.style.display = "block";
@@ -83,25 +89,20 @@ function iniciarSistemaProfessor(u) {
     };
 
     bimestreNotas.addEventListener("change", atualizarVisibilidadeNotas);
-    serieSelect.addEventListener("change", atualizarVisibilidadeNotas);
-    materiaSelect.addEventListener("change", (e) => {
+    materiaSelect.addEventListener("change", () => {
         atualizarVisibilidadeNotas();
         carregarConteudos();
     });
 
-    // CARREGAR LISTA DE ALUNOS NA TABELA
     async function carregarTabelaNotas() {
         const serie = serieSelect.value;
         const materia = materiaSelect.value;
         if (!serie || !materia) return;
-
         corpoTabelaNotas.innerHTML = "<tr><td colspan='6'>Carregando alunos...</td></tr>";
-
         try {
             const snapshot = await get(ref(db, "users"));
             const data = snapshot.val();
             corpoTabelaNotas.innerHTML = "";
-
             for (let uid in data) {
                 const aluno = data[uid];
                 if (aluno.role === "student" && aluno.serie === serie) {
@@ -119,12 +120,9 @@ function iniciarSistemaProfessor(u) {
                 }
             }
             carregarNotasExistentes();
-        } catch (err) {
-            console.error("Erro ao carregar alunos:", err);
-        }
+        } catch (err) { console.error(err); }
     }
 
-    // CÁLCULO DE MÉDIA EM TEMPO REAL NA TELA
     corpoTabelaNotas.addEventListener("input", (e) => {
         if (e.target.tagName === "INPUT") {
             const tr = e.target.closest("tr");
@@ -135,12 +133,10 @@ function iniciarSistemaProfessor(u) {
         }
     });
 
-    // BUSCAR NOTAS JÁ SALVAS NO BANCO
     async function carregarNotasExistentes() {
         const materia = materiaSelect.value;
         const bimestre = bimestreNotas.value;
         const linhas = corpoTabelaNotas.querySelectorAll("tr");
-
         for (let tr of linhas) {
             const uid = tr.dataset.uid;
             const snap = await get(ref(db, `grades/${uid}/${materia}/${bimestre}`));
@@ -155,15 +151,12 @@ function iniciarSistemaProfessor(u) {
         }
     }
 
-    // 🚀 SALVAR NOTAS (CORRIGIDO: INDIVIDUAL POR ALUNO NO LOOP)
     btnSalvarNotas.addEventListener("click", async () => {
         const materia = materiaSelect.value;
         const bimestre = bimestreNotas.value;
         if (!materia || !bimestre) return alert("Selecione matéria e bimestre!");
-
         btnSalvarNotas.disabled = true;
         btnSalvarNotas.innerText = "Salvando...";
-
         try {
             const linhas = corpoTabelaNotas.querySelectorAll("tr");
             for (let tr of linhas) {
@@ -173,29 +166,17 @@ function iniciarSistemaProfessor(u) {
                 const t = parseFloat(tr.querySelector("[data-campo='trabalho']").value) || 0;
                 const media = parseFloat(((m + a + t) / 3).toFixed(1));
                 const faltas = parseInt(tr.querySelector(".td-faltas").textContent) || 0;
-
-                // Caminho específico para cada aluno: grades/ID_ALUNO/MATERIA/BIMESTRE
                 await set(ref(db, `grades/${uid}/${materia}/${bimestre}`), {
-                    multidisciplinar: m,
-                    avaliacao: a,
-                    trabalho: t,
-                    media: media,
-                    faltas: faltas,
-                    professor: auth.currentUser.email,
-                    dataPostagem: new Date().toLocaleDateString()
+                    multidisciplinar: m, avaliacao: a, trabalho: t, media: media, faltas: faltas,
+                    professor: auth.currentUser.email, dataPostagem: new Date().toLocaleDateString()
                 });
             }
             alert("Notas salvas com sucesso!");
-        } catch (error) {
-            console.error("Erro ao salvar:", error);
-            alert("Erro de permissão ou conexão ao salvar notas.");
-        } finally {
-            btnSalvarNotas.disabled = false;
-            btnSalvarNotas.innerText = "Salvar Notas";
-        }
+        } catch (error) { alert("Erro ao salvar."); }
+        finally { btnSalvarNotas.disabled = false; btnSalvarNotas.innerText = "Salvar Notas"; }
     });
 
-    // CONTROLE DE FALTAS
+    // 🗓️ FALTAS
     serieFaltasSelect.addEventListener("change", async () => {
         listaAlunosFaltas.innerHTML = "Carregando...";
         const serie = serieFaltasSelect.value;
@@ -215,40 +196,26 @@ function iniciarSistemaProfessor(u) {
         const materia = materiaSelect.value;
         const dataFalta = dataFaltaInput.value;
         const bimestre = selectBimestre.value;
-        if (!materia || !bimestre || !dataFalta) return alert("Preencha matéria, data e bimestre.");
-
+        if (!materia || !bimestre || !dataFalta) return alert("Preencha todos os campos.");
         const selecionados = [...listaAlunosFaltas.querySelectorAll("input:checked")].map(cb => cb.value);
         if (selecionados.length === 0) return alert("Nenhum aluno selecionado.");
-
         btnSalvarFaltas.disabled = true;
-
         try {
             for (let uid of selecionados) {
                 const refGrade = ref(db, `grades/${uid}/${materia}/${bimestre}`);
                 const snap = await get(refGrade);
                 const atual = snap.val() || { faltas: 0 };
-                
-                // Preserva os dados de notas existentes e incrementa faltas
-                await set(refGrade, { 
-                    ...atual, 
-                    faltas: (parseInt(atual.faltas) || 0) + 1, 
-                    professor: auth.currentUser.email 
-                });
+                await set(refGrade, { ...atual, faltas: (parseInt(atual.faltas) || 0) + 1 });
             }
             alert("Faltas registradas!");
-            listaAlunosFaltas.querySelectorAll("input:checked").forEach(cb => cb.checked = false);
-        } catch (err) {
-            alert("Erro ao registrar faltas.");
-        } finally {
-            btnSalvarFaltas.disabled = false;
-        }
+        } catch (err) { alert("Erro ao salvar faltas."); }
+        finally { btnSalvarFaltas.disabled = false; }
     });
 
-    // CONTEÚDOS DE AULA
+    // 📖 CONTEÚDOS
     async function carregarConteudos() {
         const materia = materiaSelect.value;
         if (!materia) return;
-        
         try {
             const snap = await get(ref(db, `conteudos/${auth.currentUser.uid}/${materia}`));
             const dados = snap.val();
@@ -257,60 +224,70 @@ function iniciarSistemaProfessor(u) {
                 listaConteudos.innerHTML = "<li>Nenhum conteúdo lançado.</li>";
                 return;
             }
-            for (let k in dados) {
+            const keys = Object.keys(dados).reverse();
+            keys.forEach(k => {
                 const c = dados[k];
                 const li = document.createElement("li");
-                li.className = "item-conteudo";
                 li.innerHTML = `
                     <span><strong>[${c.bimestre}º Bim]</strong> ${c.data} - ${c.conteudo}</span>
-                    <button class="btn-editar" data-id="${k}">Editar</button>
-                    <button class="btn-excluir" data-id="${k}">Excluir</button>
+                    <div class="botoes-lista">
+                        <button class="btn-editar" onclick="window.editarConteudo('${k}', '${c.data}', '${c.conteudo}', '${c.bimestre}')">Editar</button>
+                        <button class="btn-excluir" onclick="window.excluirConteudo('${k}')">Excluir</button>
+                    </div>
                 `;
-
-                li.querySelector(".btn-editar").onclick = () => {
-                    dataAulaInput.value = c.data;
-                    conteudoInput.value = c.conteudo;
-                    bimestreConteudo.value = c.bimestre;
-                    btnSalvarConteudo.innerText = "Atualizar";
-                    btnSalvarConteudo.dataset.mode = "edit";
-                    btnSalvarConteudo.dataset.editId = k;
-                };
-
-                li.querySelector(".btn-excluir").onclick = async () => {
-                    if (confirm("Excluir conteúdo?")) {
-                        await remove(ref(db, `conteudos/${auth.currentUser.uid}/${materia}/${k}`));
-                        carregarConteudos();
-                    }
-                };
                 listaConteudos.appendChild(li);
-            }
+            });
         } catch (e) { console.error(e); }
     }
+
+    // FUNÇÕES GLOBAIS
+    window.toggleLista = () => {
+        const lista = document.getElementById("listaConteudos");
+        const btn = document.getElementById("btnToggleLista");
+        lista.classList.toggle("escondido");
+        btn.innerText = lista.classList.contains("escondido") ? "Mostrar" : "Esconder";
+    };
+
+    window.excluirConteudo = async (id) => {
+        if (confirm("Deseja realmente excluir este conteúdo?")) {
+            const materia = materiaSelect.value;
+            try {
+                await remove(ref(db, `conteudos/${auth.currentUser.uid}/${materia}/${id}`));
+                alert("Conteúdo excluído!");
+                carregarConteudos();
+            } catch (e) { alert("Erro ao excluir."); }
+        }
+    };
+
+    window.editarConteudo = (id, data, conteudo, bimestre) => {
+        idEdicaoAtual = id;
+        dataAulaInput.value = data;
+        conteudoInput.value = conteudo;
+        bimestreConteudo.value = bimestre;
+        btnSalvarConteudo.innerText = "Atualizar Conteúdo";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     btnSalvarConteudo.addEventListener("click", async () => {
         const materia = materiaSelect.value;
         if (!materia || !conteudoInput.value) return alert("Preencha os campos.");
-
-        const dados = {
-            data: dataAulaInput.value,
-            conteudo: conteudoInput.value.trim(),
-            bimestre: bimestreConteudo.value
-        };
-
-        if (btnSalvarConteudo.dataset.mode === "edit") {
-            const id = btnSalvarConteudo.dataset.editId;
-            await set(ref(db, `conteudos/${auth.currentUser.uid}/${materia}/${id}`), dados);
-            delete btnSalvarConteudo.dataset.mode;
-            btnSalvarConteudo.innerText = "Salvar Conteúdo";
-        } else {
-            const newRef = push(ref(db, `conteudos/${auth.currentUser.uid}/${materia}`));
-            await set(newRef, dados);
-        }
-        conteudoInput.value = "";
-        carregarConteudos();
+        const dados = { data: dataAulaInput.value, conteudo: conteudoInput.value.trim(), bimestre: bimestreConteudo.value };
+        try {
+            if (idEdicaoAtual) {
+                await set(ref(db, `conteudos/${auth.currentUser.uid}/${materia}/${idEdicaoAtual}`), dados);
+                idEdicaoAtual = null;
+                btnSalvarConteudo.innerText = "Salvar Conteúdo";
+            } else {
+                const newRef = push(ref(db, `conteudos/${auth.currentUser.uid}/${materia}`));
+                await set(newRef, dados);
+            }
+            conteudoInput.value = "";
+            carregarConteudos();
+            alert("Sucesso!");
+        } catch (e) { alert("Erro ao salvar."); }
     });
 
-    // LOGOUT
+    // 🚪 LOGOUT
     document.querySelector(".btn-logout").addEventListener("click", async () => {
         if (confirm("Deseja sair do sistema?")) {
             await signOut(auth);

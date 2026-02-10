@@ -13,23 +13,13 @@ body {
 header {
   display: flex;
   align-items: center;
-  justify-content: center;   /* centraliza o texto */
+  justify-content: center;
   position: relative;
   padding: 20px;
-
-  background: linear-gradient(
-    to right,
-    #ffffff 15%,
-    #32066d 15%,
-    #32066d 85%,
-    #ffffff 85%,
-    #ffffff 100%
-  );
-
+  background: linear-gradient(to right, #ffffff 15%, #32066d 15%, #32066d 85%, #ffffff 85%, #ffffff 100%);
   color: #f8f008;
 }
 
-/* Logo do header */
 header img {
   position: absolute;
   left: 20px;
@@ -44,27 +34,12 @@ header h1 {
   font-size: 28px;
 }
 
-/* 📱 Ajustes para celular */
 @media (max-width: 600px) {
-
-  header {
-    padding: 15px;
-  }
-
-  header img {
-    height: 55px;    /* diminui no celular */
-    left: 10px;
-  }
-
-  header h1 {
-    font-size: 20px;  /* diminui o texto no celular */
-    max-width: 60%;   /* impede que o texto encoste na imagem */
-    margin-left: 40px;
-  }
+  header { padding: 15px; }
+  header img { height: 55px; left: 10px; }
+  header h1 { font-size: 20px; max-width: 60%; margin-left: 40px; }
 }
 
-
-/* Container Geral */
 .container {
   max-width: 700px;
   margin: 30px auto;
@@ -75,10 +50,7 @@ header h1 {
   text-align: left;
 }
 
-/* Inputs e elementos gerais */
-.container select,
-.container input,
-.container textarea {
+.container select, .container input, .container textarea {
   width: 100%;
   padding: 8px;
   margin: 8px 0;
@@ -86,7 +58,6 @@ header h1 {
   border: 1px solid #ccc;
 }
 
-/* Botões gerais */
 .container button {
   display: inline-block;
   padding: 8px 16px;
@@ -100,9 +71,7 @@ header h1 {
   text-align: center;
 }
 
-.container button:hover {
-  background-color: #f9f630;
-}
+.container button:hover { background-color: #f9f630; }
 
 /* ===========================
    LISTA ALUNOS (FALTAS)
@@ -132,10 +101,7 @@ header h1 {
   cursor: pointer;
 }
 
-#listaAlunosFaltas div:hover {
-  background-color: #f8f8ff;
-  border-color: #32066d;
-}
+#listaAlunosFaltas div:hover { background-color: #f8f8ff; border-color: #32066d; }
 
 #listaAlunosFaltas label {
   font-weight: 500;
@@ -170,58 +136,33 @@ header h1 {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-#tabelaNotas thead {
-  position: sticky;
-  top: 0;
-  background-color: #32066d;
-  color: #f8f008;
-  z-index: 2;
-}
+#tabelaNotas thead { position: sticky; top: 0; background-color: #32066d; color: #f8f008; z-index: 2; }
 
-#tabelaNotas td,
-#tabelaNotas th {
-  text-align: center;
-  padding: 10px;
-  white-space: nowrap !important;
-}
+#tabelaNotas td, #tabelaNotas th { text-align: center; padding: 10px; white-space: nowrap !important; }
 
-#tabelaNotas td:first-child,
-#tabelaNotas th:first-child {
-  min-width: 280px !important;
-  text-align: left !important;
-  padding-left: 12px !important;
-}
+#tabelaNotas td:first-child, #tabelaNotas th:first-child { min-width: 280px !important; text-align: left !important; padding-left: 12px !important; }
 
-#tabelaNotas tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
+#tabelaNotas tbody tr:nth-child(even) { background-color: #f9f9f9; }
 
-#tabelaNotas tbody tr:hover {
-  background-color: #f3f3ff;
-  transition: 0.2s;
-}
+#tabelaNotas tbody tr:hover { background-color: #f3f3ff; transition: 0.2s; }
 
-#tabelaNotas input[type="number"] {
-  width: 80px;
-  text-align: center;
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
+#tabelaNotas input[type="number"] { width: 80px; text-align: center; padding: 5px; border: 1px solid #ccc; border-radius: 6px; }
 
-/* Transição da seção */
-#secaoNotas {
-  transition: opacity 0.3s ease;
-}
+#secaoNotas { transition: opacity 0.3s ease; }
 
 /* ===========================
-   CONTEÚDOS — LISTA COM BOTÕES
+   CONTEÚDOS — LISTA COM BOTÕES E SCROLL
    =========================== */
 
 #listaConteudos {
   list-style: none;
-  padding: 0;
+  padding: 10px;
   margin-top: 10px;
+  max-height: 400px; /* Habilita o scroll */
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fdfdfd;
 }
 
 #listaConteudos li {
@@ -236,35 +177,39 @@ header h1 {
   margin-bottom: 6px;
 }
 
-#listaConteudos li span {
-  flex: 1 !important;
-  word-break: break-word !important;
-  color: #32066d;
+/* Classe para esconder a lista */
+.escondido {
+  display: none !important;
 }
 
-#listaConteudos li div {
-  display: flex !important;
-  gap: 10px !important;
-  flex-shrink: 0 !important;
-}
+#listaConteudos li span { flex: 1 !important; word-break: break-word !important; color: #32066d; }
 
-#listaConteudos button {
-  margin: 0 !important;
-  padding: 6px 12px !important;
+#listaConteudos li div { display: flex !important; gap: 10px !important; flex-shrink: 0 !important; }
+
+/* Estilo unificado para botões de edição dentro da lista */
+.btn-editar {
   background-color: #f8f008 !important;
   color: #32066d !important;
   border: 1px solid #999 !important;
+  padding: 6px 12px !important;
   border-radius: 6px !important;
-  display: inline-flex !important;
-  cursor: pointer;
 }
 
-#listaConteudos button:hover {
-  background-color: #ffe900 !important;
+/* Botão excluir original seu */
+.btn-excluir {
+  background-color: #dc3545 !important;
+  color: white !important;
+  border: none !important;
+  padding: 6px 12px !important;
+  border-radius: 4px !important;
+  cursor: pointer;
+  font-size: 0.9em !important;
 }
+
+.btn-excluir:hover { background-color: #c82333 !important; }
 
 /* ===========================
-   BOTÃO LOGOUT
+   BOTÃO LOGOUT E PDF
    =========================== */
 
 .btn-logout {
@@ -280,23 +225,11 @@ header h1 {
   transition: 0.15s;
 }
 
-.btn-logout:hover {
-  background-color: #f9f630;
-}
+footer { margin-top: 30px; color: #666; text-align: center; }
 
-/* ===========================
-   RODAPÉ
-   =========================== */
-
-footer {
-  margin-top: 30px;
-  color: #666;
-  text-align: center;
-}
-/* Estilização da área de filtro do PDF */
 .pdf-filter-container {
     background-color: #f9f9f9;
-    border-left: 5px solid #32066d; /* Roxo principal */
+    border-left: 5px solid #32066d;
     padding: 20px;
     border-radius: 8px;
     margin: 20px 0;
@@ -307,69 +240,7 @@ footer {
     gap: 15px;
 }
 
-.pdf-filter-container label {
-    font-weight: bold;
-    color: #32066d;
-    margin-bottom: 0; /* Alinha com o select */
-}
-
-/* Estilização do botão Gerar PDF */
 #btnGerarPDF {
-    background-color: #28a745; /* Verde para destacar ação de download */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-#btnGerarPDF:hover {
-    background-color: #218838;
-    transform: scale(1.02);
-}
-
-/* Melhoria na lista de conteúdos lançados */
-.list-card li {
-    background: white;
-    border: 1px solid #ddd;
-    margin-bottom: 10px;
-    padding: 15px;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    transition: box-shadow 0.3s;
-}
-
-.list-card li:hover {
-    box-shadow: 0 2px 8px rgba(50, 6, 109, 0.2);
-}
-
-.texto-conteudo strong {
-    color: #32066d;
-    background: #f8f008;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.85em;
-    margin-right: 8px;
-}
-
-/* Botões de excluir na lista */
-.btn-excluir {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-}
-
-.btn-excluir:hover {
-    background-color: #c82333;
+    background-color: #28a745 !important;
+    color: white !important;
 }
