@@ -103,22 +103,28 @@ function iniciarSistemaProfessor(u) {
             const snapshot = await get(ref(db, "users"));
             const data = snapshot.val();
             corpoTabelaNotas.innerHTML = "";
-            for (let uid in data) {
-                const aluno = data[uid];
-                if (aluno.role === "student" && aluno.serie === serie) {
-                    const tr = document.createElement("tr");
-                    tr.dataset.uid = uid;
-                    tr.innerHTML = `
-                        <td>${aluno.name}</td>
-                        <td><input type="number" data-campo="multidisciplinar" min="0" max="10" step="0.1" value="0"></td>
-                        <td><input type="number" data-campo="avaliacao" min="0" max="10" step="0.1" value="0"></td>
-                        <td><input type="number" data-campo="trabalho" min="0" max="10" step="0.1" value="0"></td>
-                        <td class="td-media">0.0</td>
-                        <td class="td-faltas">0</td>
-                    `;
-                    corpoTabelaNotas.appendChild(tr);
-                }
-            }
+            
+            // --- AJUSTE: ORDENAÇÃO ALFABÉTICA ---
+            const listaOrdenada = Object.keys(data)
+                .map(uid => ({ uid, ...data[uid] }))
+                .filter(aluno => aluno.role === "student" && aluno.serie === serie)
+                .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+            listaOrdenada.forEach(aluno => {
+                const tr = document.createElement("tr");
+                tr.dataset.uid = aluno.uid;
+                tr.innerHTML = `
+                    <td>${aluno.name}</td>
+                    <td><input type="number" data-campo="multidisciplinar" min="0" max="10" step="0.1" value="0"></td>
+                    <td><input type="number" data-campo="avaliacao" min="0" max="10" step="0.1" value="0"></td>
+                    <td><input type="number" data-campo="trabalho" min="0" max="10" step="0.1" value="0"></td>
+                    <td class="td-media">0.0</td>
+                    <td class="td-faltas">0</td>
+                `;
+                corpoTabelaNotas.appendChild(tr);
+            });
+            // ------------------------------------
+
             carregarNotasExistentes();
         } catch (err) { console.error(err); }
     }
@@ -184,12 +190,17 @@ function iniciarSistemaProfessor(u) {
         const snap = await get(ref(db, "users"));
         const data = snap.val();
         listaAlunosFaltas.innerHTML = "";
-        for (let uid in data) {
-            const a = data[uid];
-            if (a.role === "student" && a.serie === serie) {
-                listaAlunosFaltas.innerHTML += `<div><label><input type="checkbox" value="${uid}"> ${a.name}</label></div>`;
-            }
-        }
+        
+        // --- AJUSTE: ORDENAÇÃO ALFABÉTICA ---
+        const listaFaltasOrdenada = Object.keys(data)
+            .map(uid => ({ uid, ...data[uid] }))
+            .filter(a => a.role === "student" && a.serie === serie)
+            .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+        listaFaltasOrdenada.forEach(a => {
+            listaAlunosFaltas.innerHTML += `<div><label><input type="checkbox" value="${a.uid}"> ${a.name}</label></div>`;
+        });
+        // ------------------------------------
     });
 
     btnSalvarFaltas.addEventListener("click", async () => {

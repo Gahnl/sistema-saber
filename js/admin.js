@@ -100,6 +100,65 @@ function carregarListasUsuarios() {
 }
 
 // ------------------------------------------------------------------
+// 📄 FUNÇÕES DE GERAÇÃO DE PDF (LUCKY SYSTEM)
+// ------------------------------------------------------------------
+
+// PDF de Professores
+document.getElementById("btnGerarPdfProf")?.addEventListener("click", () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("RELATÓRIO DE PROFESSORES - COLÉGIO SABER", 14, 15);
+    const rows = [];
+    document.querySelectorAll("#listaProfessores tr").forEach(tr => {
+        rows.push([tr.cells[0].innerText, tr.cells[1].innerText, tr.cells[2].innerText]);
+    });
+    doc.autoTable({
+        startY: 25,
+        head: [['Nome', 'E-mail', 'Atribuições']],
+        body: rows,
+        headStyles: { fillColor: [50, 6, 109] }
+    });
+    doc.save("Professores_Cadastrados.pdf");
+});
+
+// PDF de Todos os Alunos
+document.getElementById("btnGerarPdfAlunos")?.addEventListener("click", () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("RELATÓRIO GERAL DE ALUNOS - COLÉGIO SABER", 14, 15);
+    const rows = [];
+    document.querySelectorAll("#listaAlunosCadastrados tr").forEach(tr => {
+        rows.push([tr.cells[0].innerText, tr.cells[1].innerText, tr.cells[2].innerText]);
+    });
+    doc.autoTable({
+        startY: 25,
+        head: [['Nome', 'E-mail', 'Série']],
+        body: rows,
+        headStyles: { fillColor: [50, 6, 109] }
+    });
+    doc.save("Alunos_Geral.pdf");
+});
+
+// PDF da Lista da Turma Filtrada
+document.getElementById("btnPdfListaTurma")?.addEventListener("click", () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const titulo = document.getElementById("tituloListaTurma").innerText;
+    doc.text(titulo, 14, 15);
+    const rows = [];
+    document.querySelectorAll("#corpoListaTurma tr").forEach(tr => {
+        if(tr.cells.length > 1) rows.push([tr.cells[0].innerText, tr.cells[1].innerText]);
+    });
+    doc.autoTable({
+        startY: 25,
+        head: [['Nome do Aluno', 'E-mail']],
+        body: rows,
+        headStyles: { fillColor: [50, 6, 109] }
+    });
+    doc.save(`${titulo.replace(/ /g, "_")}.pdf`);
+});
+
+// ------------------------------------------------------------------
 // 🛠️ LÓGICA DE EDIÇÃO E CADASTRO
 // ------------------------------------------------------------------
 
@@ -326,7 +385,6 @@ document.getElementById("btnVisualizarBoletim")?.addEventListener("click", async
         let alunoUID = Object.keys(users).find(uid => users[uid].name === nome);
         if (!alunoUID) return alert("Aluno não encontrado!");
 
-        // --- Lógica de Matérias Dinâmicas ---
         const todosUsuarios = Object.values(users);
         const materiasDaTurma = new Set();
 
@@ -341,7 +399,6 @@ document.getElementById("btnVisualizarBoletim")?.addEventListener("click", async
         if (listaFinalMaterias.length === 0) {
             return alert("Nenhuma matéria cadastrada para esta turma através dos professores.");
         }
-        // ------------------------------------
 
         const gradesSnap = await get(ref(db, `grades/${alunoUID}`));
         const notas = gradesSnap.val() || {};
