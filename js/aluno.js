@@ -4,72 +4,98 @@ import { ref, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-da
 
 const tabelaNotas = document.querySelector("#tabelaNotas tbody");
 
+// ------------------------------------------------------------------
+// 📋 CONFIGURAÇÃO PADRÃO - COLÉGIO SABER
+// ------------------------------------------------------------------
+const MATERIAS_PADRAO = [
+    "Arte", "Ciências", "Educação Física", "Espanhol", "Geografia", 
+    "História", "Informática", "Inglês", "Matemática", "Música", "Português"
+];
+
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "index.html";
-    return;
-  }
-
-  try {
-    const snap = await get(ref(db, `grades/${user.uid}`));
-    const grades = snap.val();
-
-    if (!grades) {
-      tabelaNotas.innerHTML = `<tr><td colspan="6">Nenhuma nota lançada.</td></tr>`;
-      return;
+    if (!user) {
+        window.location.href = "index.html";
+        return;
     }
 
-    renderTabela(grades);
+    try {
+        // Busca notas e faltas simultaneamente
+        const [snapGrades, snapFaltas] = await Promise.all([
+            get(ref(db, `grades/${user.uid}`)),
+            get(ref(db, `faltas/${user.uid}`))
+        ]);
 
-  } catch (e) {
-    console.error(e);
-    tabelaNotas.innerHTML = `<tr><td colspan="6">Erro ao carregar notas.</td></tr>`;
-  }
+        const grades = snapGrades.val() || {};
+        const faltas = snapFaltas.val() || {};
+
+        renderTabela(grades, faltas);
+
+    } catch (e) {
+        console.error("Erro ao carregar dados:", e);
+        tabelaNotas.innerHTML = `<tr><td colspan="6">Erro ao carregar boletim.</td></tr>`;
+    }
 });
 
-function renderTabela(grades) {
-  tabelaNotas.innerHTML = "";
+function renderTabela(grades, faltas) {
+    tabelaNotas.innerHTML = "";
 
-  for (const materia in grades) {
-    const dadosMateria = grades[materia];
+    MATERIAS_PADRAO.forEach(materia => {
+        const dadosMateria = grades[materia] || {};
+        const faltasMateria = faltas[materia] || {};
 
-    const bimestres = {
-      1: dadosMateria["1"] || null,
-      2: dadosMateria["2"] || null,
-      3: dadosMateria["3"] || null,
-      4: dadosMateria["4"] || null
-    };
+        // Organiza os dados dos 4 bimestres
+        const bimestres = {
+            1: { nota: dadosMateria["1"]?.media ?? "-", falta: faltasMateria["1"] ?? 0 },
+            2: { nota: dadosMateria["2"]?.media ?? "-", falta: faltasMateria["2"] ?? 0 },
+            3: { nota: dadosMateria["3"]?.media ?? "-", falta: faltasMateria["3"] ?? 0 },
+            4: { nota: dadosMateria["4"]?.media ?? "-", falta: faltasMateria["4"] ?? 0 }
+        };
 
-    let soma = 0;
-    let qtd = 0;
+        // Cálculos de Média e Faltas Totais
+        let somaNotas = 0;
+        let qtdBimestresComNota = 0;
+        let somaFaltas = 0;
 
-    Object.values(bimestres).forEach(b => {
-      if (b?.media) {
-        soma += Number(b.media);
-        qtd++;
-      }
+        [1, 2, 3, 4].forEach(n => {
+            const nNota = bimestres[n].nota;
+            const nFalta = bimestres[n].falta;
+
+            if (nNota !== "-") {
+                somaNotas += Number(nNota);
+                qtdBimestresComNota++;
+            }
+            somaFaltas += Number(nFalta);
+        });
+
+        const mediaFinal = qtdBimestresComNota > 0 ? (somaNotas / qtdBimestresComNota).toFixed(1) : "-";
+
+        // Criação da linha na tabela
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><strong>${materia}</strong></td>
+            ${[1, 2, 3, 4].map(n => `
+                <td style="text-align: center;">
+                    <span style="font-weight: bold; color: ${bimestres[n].nota < 6 && bimestres[n].nota !== '-' ? 'red' : 'inherit'}">
+                        ${bimestres[n].nota}
+                    </span><br>
+                    <small style="color: #666;">Faltas: ${bimestres[n].falta}</small>
+                </td>
+            `).join("")}
+            <td style="text-align: center;">
+                <strong>${mediaFinal}</strong><br>
+                <small>Total Faltas: ${somaFaltas}</small>
+            </td>
+        `;
+        tabelaNotas.appendChild(tr);
     });
-
-    const mediaFinal = qtd ? (soma / qtd).toFixed(1) : "-";
-
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td><strong>${materia}</strong></td>
-      ${[1,2,3,4].map(n => `
-        <td>
-          ${bimestres[n]?.media ?? "-"} <br>
-          <small>Faltas: ${bimestres[n]?.faltas ?? "-"}</small>
-        </td>
-      `).join("")}
-      <td><strong>${mediaFinal}</strong></td>
-    `;
-
-    tabelaNotas.appendChild(tr);
-  }
 }
 
-document.getElementById("sairBtn").addEventListener("click", async () => {
-  await signOut(auth);
-  window.location.href = "index.html";
+// ------------------------------------------------------------------
+// 🚪 LOGOUT
+// ------------------------------------------------------------------
+document.getElementById("sairBtn")?.addEventListener("click", async () => {
+    if(confirm("Deseja realmente sair?")) {
+        await signOut(auth);
+        window.location.href = "index.html";
+    }
 });
