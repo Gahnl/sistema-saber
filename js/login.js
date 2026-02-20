@@ -3,6 +3,16 @@ import { signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.
 import { ref, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+  
+  // --- 🔹 NOVA LÓGICA DA SPLASH SCREEN ---
+  const splash = document.getElementById("splash-screen");
+  if (splash) {
+    setTimeout(() => {
+      splash.classList.add("hidden-splash");
+    }, 5000); // 5 segundos
+  }
+  // ---------------------------------------
+
   const form = document.getElementById("loginForm");
   const inputSenha = document.getElementById("senha");
   const togglePassword = document.getElementById("togglePassword");
@@ -16,7 +26,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const isPassword = inputSenha.type === "password";
       inputSenha.type = isPassword ? "text" : "password";
 
-      // Alterna a visibilidade dos ícones
       eyeOpen.style.display = isPassword ? "none" : "block";
       eyeClosed.style.display = isPassword ? "block" : "none";
     });

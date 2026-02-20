@@ -1,16 +1,25 @@
 import { auth, db } from "/js/firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-import { ref, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+import { ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 
 const tabelaNotas = document.querySelector("#tabelaNotas tbody");
 
 // ------------------------------------------------------------------
-// 📋 CONFIGURAÇÃO PADRÃO - COLÉGIO SABER
+// 📚 GRADE CURRICULAR FIXA POR SÉRIE
+// Importante: O nome da série aqui deve ser IGUAL ao que está no banco.
 // ------------------------------------------------------------------
-const MATERIAS_PADRAO = [
-    "Arte", "Ciências", "Educação Física", "Espanhol", "Geografia", 
-    "História", "Informática", "Inglês", "Matemática", "Música", "Português"
-];
+const GRADES_POR_SERIE = {
+    "1º Ano": ["Arte", "Ciências", "Educação Física", "Geografia", "História", "Inglês", "Matemática", "Português"],
+    "2º Ano": ["Arte", "Ciências", "Educação Física", "Geografia", "História", "Inglês", "Matemática", "Português"],
+    "3º Ano": ["Arte", "Ciências", "Educação Física", "Geografia", "História", "Inglês", "Matemática", "Português"],
+    "4º Ano": ["Arte", "Ciências", "Educação Física", "Geografia", "História", "Inglês", "Matemática", "Português"],
+    "5º Ano": ["Arte", "Ciências", "Educação Física", "Geografia", "História", "Inglês", "Matemática", "Português"],
+    "6º Ano": ["Arte", "Ciências", "Educação Física", "Espanhol", "Geografia", "História", "Inglês", "Matemática", "Português"],
+    "7º Ano": ["Arte", "Ciências", "Educação Física", "Espanhol", "Geografia", "História", "Inglês", "Matemática", "Português"],
+    "8º Ano": ["Arte", "Ciências", "Educação Física", "Espanhol", "Geografia", "História", "Inglês", "Matemática", "Português"],
+    "9º Ano": ["Arte", "Ciências", "Educação Física", "Espanhol", "Geografia", "História", "Inglês", "Matemática", "Português", "Música"],
+    "Ensino Médio": ["Arte", "Biologia", "Educação Física", "Espanhol", "Física", "Geografia", "História", "Inglês", "Matemática", "Português", "Química", "Sociologia", "Filosofia"]
+};
 
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
@@ -19,57 +28,63 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     try {
-        // Busca notas e faltas simultaneamente
-        const [snapGrades, snapFaltas] = await Promise.all([
-            get(ref(db, `grades/${user.uid}`)),
-            get(ref(db, `faltas/${user.uid}`))
-        ]);
+        // 1. Busca os dados fixos do aluno (Série)
+        const snapUser = await get(ref(db, `users/${user.uid}`));
+        const dadosAluno = snapUser.val();
 
-        const grades = snapGrades.val() || {};
-        const faltas = snapFaltas.val() || {};
+        if (!dadosAluno || !dadosAluno.serie) {
+            tabelaNotas.innerHTML = `<tr><td colspan="6">Série não identificada no cadastro.</td></tr>`;
+            return;
+        }
 
-        renderTabela(grades, faltas);
+        const serieDoAluno = dadosAluno.serie;
+        // Pega a lista de matérias da grade ou, se não existir, usa as que já têm nota
+        let listaMateriasBase = GRADES_POR_SERIE[serieDoAluno];
+
+        // 2. ESCUTA AS NOTAS EM TEMPO REAL
+        // Sempre que qualquer professor mudar algo em 'grades/UID_DO_ALUNO', este bloco executa sozinho
+        onValue(ref(db, `grades/${user.uid}`), (snapshot) => {
+            const grades = snapshot.val() || {};
+            
+            // Se a série não foi encontrada no mapa acima, ele mostra o que tiver de nota
+            const materiasParaExibir = listaMateriasBase || Object.keys(grades);
+            
+            renderTabela(materiasParaExibir.sort(), grades);
+        });
 
     } catch (e) {
-        console.error("Erro ao carregar dados:", e);
-        tabelaNotas.innerHTML = `<tr><td colspan="6">Erro ao carregar boletim.</td></tr>`;
+        console.error("Erro ao carregar boletim:", e);
+        tabelaNotas.innerHTML = `<tr><td colspan="6">Erro ao carregar dados.</td></tr>`;
     }
 });
 
-function renderTabela(grades, faltas) {
+function renderTabela(materias, grades) {
     tabelaNotas.innerHTML = "";
 
-    MATERIAS_PADRAO.forEach(materia => {
+    materias.forEach(materia => {
         const dadosMateria = grades[materia] || {};
-        const faltasMateria = faltas[materia] || {};
 
-        // Organiza os dados dos 4 bimestres
+        // Organiza os 4 bimestres
         const bimestres = {
-            1: { nota: dadosMateria["1"]?.media ?? "-", falta: faltasMateria["1"] ?? 0 },
-            2: { nota: dadosMateria["2"]?.media ?? "-", falta: faltasMateria["2"] ?? 0 },
-            3: { nota: dadosMateria["3"]?.media ?? "-", falta: faltasMateria["3"] ?? 0 },
-            4: { nota: dadosMateria["4"]?.media ?? "-", falta: faltasMateria["4"] ?? 0 }
+            1: { nota: dadosMateria["1"]?.media ?? "-", falta: dadosMateria["1"]?.faltas ?? 0 },
+            2: { nota: dadosMateria["2"]?.media ?? "-", falta: dadosMateria["2"]?.faltas ?? 0 },
+            3: { nota: dadosMateria["3"]?.media ?? "-", falta: dadosMateria["3"]?.faltas ?? 0 },
+            4: { nota: dadosMateria["4"]?.media ?? "-", falta: dadosMateria["4"]?.faltas ?? 0 }
         };
 
-        // Cálculos de Média e Faltas Totais
-        let somaNotas = 0;
-        let qtdBimestresComNota = 0;
-        let somaFaltas = 0;
+        let somaNotas = 0, qtdComNota = 0, somaFaltas = 0;
 
         [1, 2, 3, 4].forEach(n => {
-            const nNota = bimestres[n].nota;
-            const nFalta = bimestres[n].falta;
-
-            if (nNota !== "-") {
-                somaNotas += Number(nNota);
-                qtdBimestresComNota++;
+            const nota = bimestres[n].nota;
+            if (nota !== "-") {
+                somaNotas += Number(nota);
+                qtdComNota++;
             }
-            somaFaltas += Number(nFalta);
+            somaFaltas += Number(bimestres[n].falta);
         });
 
-        const mediaFinal = qtdBimestresComNota > 0 ? (somaNotas / qtdBimestresComNota).toFixed(1) : "-";
+        const mediaFinal = qtdComNota > 0 ? (somaNotas / qtdComNota).toFixed(1) : "-";
 
-        // Criação da linha na tabela
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td><strong>${materia}</strong></td>
@@ -90,9 +105,7 @@ function renderTabela(grades, faltas) {
     });
 }
 
-// ------------------------------------------------------------------
-// 🚪 LOGOUT
-// ------------------------------------------------------------------
+// Logout
 document.getElementById("sairBtn")?.addEventListener("click", async () => {
     if(confirm("Deseja realmente sair?")) {
         await signOut(auth);

@@ -6,59 +6,84 @@ body {
   text-align: center;
 }
 
+/* ================= HEADER TIPO BANNER (PADRONIZADO) ================= */
 header {
   display: flex;
   align-items: center;
-  justify-content: center;   /* centraliza o texto */
+  justify-content: center;
   position: relative;
-  padding: 20px;
-
+  height: 130px; /* Altura idêntica ao admin */
+  padding: 0 20px;
   background: linear-gradient(
-    to right,
-    #ffffff 15%,
-    #32066d 15%,
-    #32066d 85%,
-    #ffffff 85%,
+    to right, 
+    #ffffff 0%, 
+    #ffffff 18%, 
+    #32066d 18%, 
+    #32066d 82%, 
+    #ffffff 82%, 
     #ffffff 100%
   );
-
-  color: #f8f008;
+  border-bottom: 4px solid #f8f008; /* Linha amarela de acabamento */
 }
 
-/* Logo do header */
+/* Configuração dos Logos */
 header img {
   position: absolute;
-  left: 20px;
-  height: 80px;
+  height: 90px;
+  width: auto;
   top: 50%;
   transform: translateY(-50%);
+  object-fit: contain;
+}
+
+.logo-left {
+  left: 30px;
+}
+
+.logo-right {
+  right: 90px;
+}
+
+/* Centralização do Texto */
+.header-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
 }
 
 header h1 {
-  margin: 0;
-  text-align: center;
+  margin: 0 !important;
+  color: #f8f008;
   font-size: 28px;
+  font-weight: bold;
+  line-height: 1.1;
+  text-align: center;
 }
 
-/* 📱 Ajustes para celular */
-@media (max-width: 600px) {
-
+/* 📱 Ajustes para celular (Responsividade) */
+@media (max-width: 800px) {
   header {
-    padding: 15px;
+    background: #32066d; /* Remove faixas brancas no celular para ganhar espaço */
+    height: auto;
+    padding: 20px;
+    flex-direction: column;
+    gap: 15px;
   }
-
   header img {
-    height: 55px;    /* diminui no celular */
-    left: 10px;
+    position: static;
+    transform: none;
+    height: 60px;
   }
-
+  .logo-left, .logo-right {
+    left: auto;
+    right: auto;
+  }
   header h1 {
-    font-size: 20px;  /* diminui o texto no celular */
-    max-width: 60%;   /* impede que o texto encoste na imagem */
-    margin-left: 40px;
+    font-size: 20px;
   }
 }
-
 .container {
   max-width: 900px;
   margin: 30px auto;

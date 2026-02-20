@@ -11,8 +11,14 @@
 <body>
 
 <header>
-    <img src="Assets/simbolo saber.png" alt="Logo">
+  <img src="Assets/logo cs.png" alt="Logo Escola" class="logo-left">
+  
+  <div class="header-text">
     <h1>Colégio Saber Igaraçu do Tietê</h1>
+   
+  </div>
+
+  <img src="Assets/CE - LOGO.png" alt="Logo Sistema" class="logo-right">
 </header>
 
 <div class="container">
@@ -20,7 +26,11 @@
     <div class="form-card">
         <input type="text" id="profName" placeholder="Nome do professor">
         <input type="email" id="profEmail" placeholder="E-mail">
-        <input type="password" id="profSenha" placeholder="Senha">
+        
+        <div style="position: relative; width: 100%; margin-bottom: 10px;">
+            <input type="password" id="profSenha" placeholder="Senha" style="width: 100%; padding-right: 40px; box-sizing: border-box;">
+            <span onclick="toggleSenha('profSenha')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 18px;" title="Ver/Esconder senha">👁️</span>
+        </div>
         
         <label>Vincular Turmas e Matérias:</label>
         <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; border: 1px dashed #32066d; margin-bottom: 10px;">
@@ -38,7 +48,7 @@
                     <label><input type="checkbox" value="7º ano"> 7º ano</label>
                     <label><input type="checkbox" value="8º ano"> 8º ano</label>
                     <label><input type="checkbox" value="9º ano A"> 9º ano A</label>
-                     <label><input type="checkbox" value="9º ano B"> 9º ano B</label>
+                    <label><input type="checkbox" value="9º ano B"> 9º ano B</label>
                 </div>
             </div>
 
@@ -73,29 +83,33 @@
 
     <hr>
 
-   <h2>Cadastrar Aluno</h2>
-<div class="form-card">
-    <input type="text" id="alunoName" placeholder="Nome do aluno">
-    <input type="email" id="alunoEmail" placeholder="E-mail">
-    <input type="password" id="alunoSenha" placeholder="Senha">
-    
-    <label for="alunoSerie">Série:</label>
-    <select id="alunoSerie">
-        <option value="">Selecione a série</option>
-        <option value="1º ano">1º ano</option>
-        <option value="2º ano">2º ano</option>
-        <option value="3º ano">3º ano</option>
-        <option value="4º ano">4º ano</option>
-        <option value="5º ano">5º ano</option>
-        <option value="6º ano">6º ano</option>
-        <option value="7º ano">7º ano</option>
-        <option value="8º ano">8º ano</option>
-        <option value="9º ano A">9º ano A</option>
-        <option value="9º ano B">9º ano B</option>
-    </select>
-    
-    <button id="btnCreateAluno">Cadastrar Aluno</button>
-</div>
+    <h2>Cadastrar Aluno</h2>
+    <div class="form-card">
+        <input type="text" id="alunoName" placeholder="Nome do aluno">
+        <input type="email" id="alunoEmail" placeholder="E-mail">
+        
+        <div style="position: relative; width: 100%; margin-bottom: 10px;">
+            <input type="password" id="alunoSenha" placeholder="Senha" style="width: 100%; padding-right: 40px; box-sizing: border-box;">
+            <span onclick="toggleSenha('alunoSenha')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 18px;" title="Ver/Esconder senha">👁️</span>
+        </div>
+        
+        <label for="alunoSerie">Série:</label>
+        <select id="alunoSerie">
+            <option value="">Selecione a série</option>
+            <option value="1º ano">1º ano</option>
+            <option value="2º ano">2º ano</option>
+            <option value="3º ano">3º ano</option>
+            <option value="4º ano">4º ano</option>
+            <option value="5º ano">5º ano</option>
+            <option value="6º ano">6º ano</option>
+            <option value="7º ano">7º ano</option>
+            <option value="8º ano">8º ano</option>
+            <option value="9º ano A">9º ano A</option>
+            <option value="9º ano B">9º ano B</option>
+        </select>
+        
+        <button id="btnCreateAluno">Cadastrar Aluno</button>
+    </div>
 
     <hr>
 

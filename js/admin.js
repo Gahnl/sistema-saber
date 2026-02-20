@@ -7,6 +7,16 @@ import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.
 let atribuicoesProfessor = {};
 let editandoProfessorUid = null;
 
+// --- FUNÇÃO PARA MOSTRAR/ESCONDER SENHA (NOVA) ---
+window.toggleSenha = (idCampo) => {
+    const campo = document.getElementById(idCampo);
+    if (campo.type === "password") {
+        campo.type = "text";
+    } else {
+        campo.type = "password";
+    }
+};
+
 // ------------------------------------------------------------------
 // 🔒 PROTEÇÃO DE ROTA
 // ------------------------------------------------------------------
@@ -103,7 +113,6 @@ function carregarListasUsuarios() {
 // 📄 FUNÇÕES DE GERAÇÃO DE PDF (LUCKY SYSTEM)
 // ------------------------------------------------------------------
 
-// PDF de Professores
 document.getElementById("btnGerarPdfProf")?.addEventListener("click", () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -121,7 +130,6 @@ document.getElementById("btnGerarPdfProf")?.addEventListener("click", () => {
     doc.save("Professores_Cadastrados.pdf");
 });
 
-// PDF de Todos os Alunos
 document.getElementById("btnGerarPdfAlunos")?.addEventListener("click", () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -139,7 +147,6 @@ document.getElementById("btnGerarPdfAlunos")?.addEventListener("click", () => {
     doc.save("Alunos_Geral.pdf");
 });
 
-// PDF da Lista da Turma Filtrada
 document.getElementById("btnPdfListaTurma")?.addEventListener("click", () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -173,6 +180,7 @@ window.prepararEdicaoProf = async (uid) => {
         document.getElementById("profEmail").disabled = true; 
         document.getElementById("profSenha").placeholder = "Bloqueado na edição";
         document.getElementById("profSenha").disabled = true; 
+        document.getElementById("profSenha").type = "password"; // Garante que volte a ser password na edição
 
         atribuicoesProfessor = JSON.parse(JSON.stringify(prof.atribuicoes || {}));
         editandoProfessorUid = uid;
@@ -261,6 +269,7 @@ function resetarFormularioProf() {
     document.getElementById("profEmail").disabled = false;
     document.getElementById("profSenha").value = "";
     document.getElementById("profSenha").disabled = false;
+    document.getElementById("profSenha").type = "password";
     document.getElementById("profSenha").placeholder = "Senha";
     document.getElementById("btnCreateProf").textContent = "Finalizar Cadastro do Professor";
     document.getElementById("listaAtribuidas").innerHTML = "";
@@ -369,55 +378,62 @@ document.getElementById("btnGerarLista")?.addEventListener("click", async () => 
     } catch (e) { alert("Erro ao buscar lista."); }
 });
 
-// --- Visualização do Boletim (MATÉRIAS DINÂMICAS) ---
+// ------------------------------------------------------------------
+// 📊 VISUALIZAÇÃO DO BOLETIM (AJUSTADO: APENAS MATÉRIAS DA TURMA DO ALUNO)
+// ------------------------------------------------------------------
 let dadosGlobaisBoletim = [];
 let alunoSelecionadoNome = "";
 
 document.getElementById("btnVisualizarBoletim")?.addEventListener("click", async () => {
     const nome = document.getElementById("filtroAluno").value.trim();
-    const serie = document.getElementById("filtroSerie").value;
     const corpo = document.getElementById("tabelaCorpoPreview");
-    if (!nome || !serie) return alert("Selecione Aluno e Série!");
+    if (!nome) return alert("Selecione um Aluno!");
 
     try {
         const usersSnap = await get(ref(db, "users"));
         const users = usersSnap.val();
+        
+        // 1. Identifica o UID do aluno e a SÉRIE dele
         let alunoUID = Object.keys(users).find(uid => users[uid].name === nome);
         if (!alunoUID) return alert("Aluno não encontrado!");
+        
+        const serieDoAluno = users[alunoUID].serie; 
+        if (!serieDoAluno) return alert("Este aluno não possui uma série cadastrada no perfil.");
 
-        const todosUsuarios = Object.values(users);
+        // 2. Filtra matérias: pega apenas as que os professores dão para a série do aluno
         const materiasDaTurma = new Set();
-
-        todosUsuarios.forEach(u => {
-            if (u.role === "teacher" && u.atribuicoes && u.atribuicoes[serie]) {
-                u.atribuicoes[serie].forEach(m => materiasDaTurma.add(m));
+        Object.values(users).forEach(u => {
+            if (u.role === "teacher" && u.atribuicoes && u.atribuicoes[serieDoAluno]) {
+                u.atribuicoes[serieDoAluno].forEach(m => materiasDaTurma.add(m));
             }
         });
 
         const listaFinalMaterias = Array.from(materiasDaTurma).sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
         if (listaFinalMaterias.length === 0) {
-            return alert("Nenhuma matéria cadastrada para esta turma através dos professores.");
+            return alert("Nenhuma matéria cadastrada para a turma " + serieDoAluno);
         }
 
+        // 3. Busca notas do aluno
         const gradesSnap = await get(ref(db, `grades/${alunoUID}`));
         const notas = gradesSnap.val() || {};
         
         corpo.innerHTML = "";
         dadosGlobaisBoletim = [];
         alunoSelecionadoNome = nome;
-        document.getElementById("infoAlunoPreview").innerText = `${nome} - ${serie}`;
+        document.getElementById("infoAlunoPreview").innerText = `${nome} - ${serieDoAluno}`;
 
+        // 4. Gera a tabela baseada na grade da turma
         listaFinalMaterias.forEach(mat => {
             let somaMedias = 0, totalFaltas = 0, bimsComNota = 0;
             let nBims = [];
             for(let b=1; b<=4; b++) {
                 const dado = notas[mat] ? notas[mat][b] : null;
-                const nota = dado ? (dado.media || "0") : "-";
+                const nota = (dado && dado.media !== "") ? dado.media : "-";
                 nBims.push(nota);
-                if(dado) { 
+                if(dado && dado.media !== "" && dado.media !== undefined) { 
                     somaMedias += parseFloat(dado.media); 
-                    totalFaltas += parseInt(dado.faltas); 
+                    totalFaltas += parseInt(dado.faltas || 0); 
                     bimsComNota++; 
                 }
             }
