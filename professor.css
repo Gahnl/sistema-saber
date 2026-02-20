@@ -10,36 +10,80 @@ body {
   text-align: center;
 }
 
+/* ================= HEADER TIPO BANNER ================= */
 header {
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 20px;
-  background: linear-gradient(to right, #ffffff 15%, #32066d 15%, #32066d 85%, #ffffff 85%, #ffffff 100%);
-  color: #f8f008;
+  height: 130px; /* Altura ideal para o banner */
+  padding: 0 20px;
+  background: linear-gradient(
+    to right, 
+    #ffffff 0%, 
+    #ffffff 18%, 
+    #32066d 18%, 
+    #32066d 82%, 
+    #ffffff 82%, 
+    #ffffff 100%
+  );
+  border-bottom: 4px solid #f8f008; /* Linha amarela fina abaixo do header */
 }
 
+/* Logos posicionados nas áreas brancas */
 header img {
   position: absolute;
-  left: 20px;
-  height: 80px;
+  height: 90px; /* Ajuste conforme o tamanho original da sua imagem */
+  width: auto;
   top: 50%;
   transform: translateY(-50%);
+  object-fit: contain;
+}
+
+.logo-left {
+  left: 30px;
+}
+
+.logo-right {
+  right: 90px;
+}
+
+/* Centralização do Texto no Bloco Roxo */
+.header-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
 }
 
 header h1 {
   margin: 0;
-  text-align: center;
+  color: #f8f008;
   font-size: 28px;
+  font-weight: bold;
+  text-transform: none; /* Mantém como você escreveu */
+  line-height: 1.1;
 }
 
-@media (max-width: 600px) {
-  header { padding: 15px; }
-  header img { height: 55px; left: 10px; }
-  header h1 { font-size: 20px; max-width: 60%; margin-left: 40px; }
+/* Responsividade para telas pequenas */
+@media (max-width: 800px) {
+  header {
+    background: #32066d; /* Em telas pequenas, removemos as laterais brancas */
+    height: auto;
+    padding: 20px;
+    flex-direction: column;
+    gap: 15px;
+  }
+  header img {
+    position: static;
+    transform: none;
+    height: 60px;
+  }
+  header h1 {
+    font-size: 20px;
+  }
 }
-
 .container {
   max-width: 700px;
   margin: 30px auto;
