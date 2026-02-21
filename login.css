@@ -118,9 +118,15 @@ footer { margin-top: 30px; color: #666; }
 }
 
 .splash-content img {
-    width:500px; /* Agora seu logo pode ser grande aqui! */
+    /* No celular, ele ocupa 80% da largura da tela */
+    width: 80vw; 
+    /* No computador, ele não fica exagerado, trava em 450px */
+    max-width: 450px; 
     height: auto;
     margin-bottom: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
     animation: pulse 2s infinite;
 }
 
